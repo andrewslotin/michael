@@ -8,6 +8,7 @@ import (
 	"os/signal"
 	"syscall"
 
+	"github.com/andrewslotin/slack-deploy-command/deploy"
 	"github.com/andrewslotin/slack-deploy-command/server"
 )
 
@@ -41,7 +42,7 @@ func main() {
 	log.SetOutput(os.Stderr)
 	log.SetFlags(5)
 
-	server := server.New(args.host, args.port, token)
+	server := server.New(args.host, args.port, token, deploy.NewStore())
 	if err := server.Start(); err != nil {
 		log.Fatal(err)
 	}

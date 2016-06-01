@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/andrewslotin/slack-deploy-command/deploy"
 	"github.com/andrewslotin/slack-deploy-command/slack"
 )
 
@@ -25,12 +26,14 @@ type Server struct {
 
 	listener   net.Listener
 	slackToken string
+	deploys    *deploy.Store
 }
 
-func New(host string, port int, slackToken string) *Server {
+func New(host string, port int, slackToken string, deploys *deploy.Store) *Server {
 	return &Server{
 		Addr:       fmt.Sprintf("%s:%d", host, port),
 		slackToken: slackToken,
+		deploys:    deploys,
 	}
 }
 
@@ -86,20 +89,21 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	case "done":
 		channelID := r.PostFormValue("channel_id")
+		s.deploys.Del(channelID)
 
 		go sendDelayedResponse(w, r.PostFormValue("response_url"), fmt.Sprintf("%s done deploying", user))
 	default:
 		w.Write(nil)
 
-		user := slack.User{
-			ID:   r.PostFormValue("user_id"),
-			Name: r.PostFormValue("user_name"),
-		}
+		channelID := r.PostFormValue("channel_id")
+		subject = strings.Replace(subject, " ", ", ", strings.Count(subject, " ")-1)
+		subject = strings.Replace(subject, " ", " and ", 1)
 
+		s.deploys.Set(channelID, user, subject)
 		go sendDelayedResponse(
 			w,
 			r.PostFormValue("response_url"),
-			fmt.Sprintf("%s is about to deploy %s", user, html.EscapeString(strings.Replace(subject, " ", ", ", -1))),
+			fmt.Sprintf("%s is about to deploy %s", user, html.EscapeString(subject)),
 		)
 	}
 }
