@@ -114,7 +114,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			response = fmt.Sprintf(DeployInterruptedMessage, user, d.User)
 		}
 
-		go sendDelayedResponse(w, r.PostFormValue("response_url"), response)
+		go sendDelayedResponse(w, r, response)
 	default:
 		if d, ok := s.deploys.Get(channelID); ok && d.User.ID != user.ID {
 			respondToUser(w, fmt.Sprintf(DeployConflictMessage, d.User, d.StartedAt.Format(time.RFC822)))
@@ -124,7 +124,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		s.deploys.Set(channelID, user, subject)
 		w.Write(nil)
 
-		go sendDelayedResponse(w, r.PostFormValue("response_url"), fmt.Sprintf(DeployAnnouncementMessage, user, html.EscapeString(subject)))
+		go sendDelayedResponse(w, r, fmt.Sprintf(DeployAnnouncementMessage, user, html.EscapeString(subject)))
 	}
 }
 
@@ -140,7 +140,13 @@ func respondToUser(w http.ResponseWriter, text string) {
 	w.Write(response)
 }
 
-func sendDelayedResponse(w http.ResponseWriter, responseURL, text string) {
+func sendDelayedResponse(w http.ResponseWriter, r *http.Request, text string) {
+	responseURL := r.PostFormValue("response_url")
+	if responseURL == "" {
+		log.Printf("cannot send delayed response to a without without response_url")
+		return
+	}
+
 	response, err := json.Marshal(slack.NewInChannelResponse(text))
 	if err != nil {
 		log.Printf("failed to respond in channel with %s (%s)", text, err)
