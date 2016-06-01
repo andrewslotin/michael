@@ -33,6 +33,11 @@ func init() {
 func main() {
 	flag.Parse()
 
+	token := os.Getenv("SLACK_TOKEN")
+	if token == "" {
+		log.Fatal("Missing SLACK_TOKEN env variable")
+	}
+
 	log.SetOutput(os.Stderr)
 	log.SetFlags(5)
 
