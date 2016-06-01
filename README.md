@@ -35,10 +35,20 @@ Usage
 Deploys are tracked per channel. This means that different channels can run different deploys at the same time.
 
 * <kbd>/deploy status</kbd> — see if there is a deploy currently running.
+    ![Deploy status response](../master/docs/deploy-status.jpg)
 * <kbd>/deploy &lt;subject&gt;</kbd> — initiate a deploy in the channel. <subject> is an arbitrary string describing what's being deployed.
+    ![Deploy announcement](../master/docs/deploy-start.jpg)
 
-    If there is already a deploy announced by another user in this channel, it needs to be finished first. However if you already initiated a deploy the channel, you can update its subject by executing this command again.
-* <kbd>/deploy done</kbd> — finish current deploy, you can also finish a deploy started by another user.
+    If there is already a deploy announced by another user in this channel, it needs to be finished first.
+    ![Deploy already started message](../master/docs/deploy-running.jpg)
+    
+    However if you already initiated a deploy the channel, you can update its subject by executing this command again.
+* <kbd>/deploy done</kbd> — finish current deploy.
+    
+    ![Deploy completion announcement](../master/docs/deploy-done.jpg)
+    
+    You can also finish a deploy started by another user.
+    ![Complete unfinished deploy](../master/docs/deploy-finish-other.jpg)
 
 License
 -------
