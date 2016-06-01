@@ -1,11 +1,12 @@
 package server
 
 import (
+	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"net"
 	"net/http"
+	"strings"
 )
 
 type Server struct {
@@ -13,6 +14,11 @@ type Server struct {
 
 	listener   net.Listener
 	slackToken string
+}
+
+type Response struct {
+	ResponseType string `json:"response_type,omitempty"`
+	Text         string `json:"text"`
 }
 
 func New(host string, port int, slackToken string) *Server {
@@ -58,12 +64,48 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	body, err := ioutil.ReadAll(r.Body)
-	if err != nil {
-		log.Printf("failed to read request body (%s)", err)
-		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+	if cmd := r.PostFormValue("command"); cmd != "/deploy" {
+		respondToUser(w, fmt.Sprintf("%s is not supported", cmd))
 		return
 	}
 
-	w.Write(body)
+	subject := r.PostFormValue("text")
+	if subject == "" {
+		respondToUser(w, "Please specify what you are about to deploy.\nExample:\n```\n/deploy repository-name#1 repository-name#2\n```")
+		return
+	}
+
+	respondInChannel(w, fmt.Sprintf("%s is about to deploy %s", userLink(r.PostFormValue("user_id"), r.PostFormValue("user_name")), strings.Replace(subject, " ", ", ", -1)))
+}
+
+func userLink(userID, userName string) string {
+	return "<@" + userID + "|" + userName + ">"
+}
+
+func respondToUser(w http.ResponseWriter, text string) {
+	response, err := json.Marshal(Response{
+		ResponseType: "ephemeral",
+		Text:         text,
+	})
+	if err != nil {
+		log.Printf("failed to respond to user with %q (%s)", text, err)
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		return
+	}
+
+	w.Write(response)
+}
+
+func respondInChannel(w http.ResponseWriter, text string) {
+	response, err := json.Marshal(Response{
+		ResponseType: "in_channel",
+		Text:         text,
+	})
+	if err != nil {
+		log.Printf("failed to respond in channel with %q (%s)", text, err)
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		return
+	}
+
+	w.Write(response)
 }
