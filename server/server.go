@@ -8,6 +8,8 @@ import (
 	"net"
 	"net/http"
 	"strings"
+
+	"github.com/andrewslotin/slack-deploy-command/slack"
 )
 
 const HelpMessage = `Available commands:
@@ -21,11 +23,6 @@ type Server struct {
 
 	listener   net.Listener
 	slackToken string
-}
-
-type Response struct {
-	ResponseType string `json:"response_type,omitempty"`
-	Text         string `json:"text"`
 }
 
 func New(host string, port int, slackToken string) *Server {
@@ -97,10 +94,7 @@ func userLink(userID, userName string) string {
 }
 
 func respondToUser(w http.ResponseWriter, text string) {
-	response, err := json.Marshal(Response{
-		ResponseType: "ephemeral",
-		Text:         text,
-	})
+	response, err := json.Marshal(slack.NewEphemeralResponse(text))
 	if err != nil {
 		log.Printf("failed to respond to user with %q (%s)", text, err)
 		http.Error(w, "Internal server error", http.StatusInternalServerError)
@@ -112,10 +106,7 @@ func respondToUser(w http.ResponseWriter, text string) {
 }
 
 func sendDelayedResponse(w http.ResponseWriter, responseURL, text string) {
-	response, err := json.Marshal(Response{
-		ResponseType: "in_channel",
-		Text:         text,
-	})
+	response, err := json.Marshal(slack.NewInChannelResponse(text))
 	if err != nil {
 		log.Printf("failed to respond in channel with %s (%s)", text, err)
 		return
