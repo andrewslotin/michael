@@ -54,15 +54,24 @@ func TestStore_GetSet(t *testing.T) {
 func TestStore_Del(t *testing.T) {
 	store := deploy.NewStore()
 
+	_, ok := store.Del("key1")
+	assert.False(t, ok)
+
 	store.Set("key1", slack.User{ID: "1", Name: "First User"}, "Deploy subject")
 	store.Set("key2", slack.User{ID: "2", Name: "Second User"}, "Another deploy")
 
-	_, ok := store.Get("key1")
+	_, ok = store.Get("key1")
 	require.True(t, ok)
 	_, ok = store.Get("key2")
 	require.True(t, ok)
 
-	store.Del("key1")
+	d, ok := store.Del("key1")
+	assert.True(t, ok)
+	assert.Equal(t, "1", d.User.ID)
+	assert.Equal(t, "First User", d.User.Name)
+	assert.Equal(t, "Deploy subject", d.Subject)
+	assert.WithinDuration(t, time.Now(), d.StartedAt, time.Second)
+
 	_, ok = store.Get("key1")
 	assert.False(t, ok)
 	_, ok = store.Get("key2")

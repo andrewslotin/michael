@@ -36,8 +36,11 @@ func (s *Store) Set(key string, user slack.User, subject string) {
 	s.mu.Unlock()
 }
 
-func (s *Store) Del(key string) {
+func (s *Store) Del(key string) (deploy Deploy, ok bool) {
 	s.mu.Lock()
+	deploy, ok = s.m[key]
 	delete(s.m, key)
 	s.mu.Unlock()
+
+	return deploy, ok
 }
