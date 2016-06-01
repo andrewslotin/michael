@@ -98,9 +98,15 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 		respondToUser(w, fmt.Sprintf("%s is deploying %s since %s", d.User, d.Subject, d.StartedAt.Format(time.RFC822)))
 	case "done":
-		s.deploys.Del(channelID)
+		d, _ := s.deploys.Del(channelID)
 
-		go sendDelayedResponse(w, r.PostFormValue("response_url"), fmt.Sprintf("%s done deploying", user))
+		var response string
+		if d.User.ID == user.ID {
+			response = fmt.Sprintf("%s done deploying", user)
+		} else {
+			response = fmt.Sprintf("%s has finished the deploy started by %s", user, d.User)
+		}
+		go sendDelayedResponse(w, r.PostFormValue("response_url"), response)
 	default:
 		subject = strings.Replace(subject, " ", ",", strings.Count(subject, " ")-1)
 		subject = strings.Replace(subject, " ", " and ", 1)
