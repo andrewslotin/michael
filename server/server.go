@@ -79,19 +79,19 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		respondToUser(w, html.EscapeString(HelpMessage))
 		return
 	default:
-		userName := r.PostFormValue("user_name")
 		w.Write(nil)
+
+		user := slack.User{
+			ID:   r.PostFormValue("user_id"),
+			Name: r.PostFormValue("user_name"),
+		}
 
 		go sendDelayedResponse(
 			w,
 			r.PostFormValue("response_url"),
-			fmt.Sprintf("%s is about to deploy %s", userLink(r.PostFormValue("user_id"), userName), html.EscapeString(strings.Replace(subject, " ", ", ", -1))),
+			fmt.Sprintf("%s is about to deploy %s", user, html.EscapeString(strings.Replace(subject, " ", ", ", -1))),
 		)
 	}
-}
-
-func userLink(userID, userName string) string {
-	return "<@" + userID + "|" + userName + ">"
 }
 
 func respondToUser(w http.ResponseWriter, text string) {
