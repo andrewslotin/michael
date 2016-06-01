@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"html"
 	"log"
 	"net"
 	"net/http"
@@ -69,13 +70,13 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if cmd := r.PostFormValue("command"); cmd != "/deploy" {
-		respondToUser(w, fmt.Sprintf("%s is not supported", cmd))
+		respondToUser(w, html.EscapeString(fmt.Sprintf("%s is not supported", cmd)))
 		return
 	}
 
 	switch subject := r.PostFormValue("text"); subject {
 	case "", "help":
-		respondToUser(w, HelpMessage)
+		respondToUser(w, html.EscapeString(HelpMessage))
 		return
 	default:
 		userName := r.PostFormValue("user_name")
@@ -84,7 +85,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		go sendDelayedResponse(
 			w,
 			r.PostFormValue("response_url"),
-			fmt.Sprintf("%s is about to deploy %s", userLink(r.PostFormValue("user_id"), userName), strings.Replace(subject, " ", ", ", -1)),
+			fmt.Sprintf("%s is about to deploy %s", userLink(r.PostFormValue("user_id"), userName), html.EscapeString(strings.Replace(subject, " ", ", ", -1))),
 		)
 	}
 }
