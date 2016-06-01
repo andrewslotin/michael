@@ -1,6 +1,7 @@
 package server
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -75,7 +76,14 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	respondInChannel(w, fmt.Sprintf("%s is about to deploy %s", userLink(r.PostFormValue("user_id"), r.PostFormValue("user_name")), strings.Replace(subject, " ", ", ", -1)))
+	userName := r.PostFormValue("user_name")
+	w.Write(nil)
+
+	go sendDelayedResponse(
+		w,
+		r.PostFormValue("response_url"),
+		fmt.Sprintf("%s is about to deploy %s", userLink(r.PostFormValue("user_id"), userName), strings.Replace(subject, " ", ", ", -1)),
+	)
 }
 
 func userLink(userID, userName string) string {
@@ -97,17 +105,20 @@ func respondToUser(w http.ResponseWriter, text string) {
 	w.Write(response)
 }
 
-func respondInChannel(w http.ResponseWriter, text string) {
+func sendDelayedResponse(w http.ResponseWriter, responseURL, text string) {
 	response, err := json.Marshal(Response{
 		ResponseType: "in_channel",
 		Text:         text,
 	})
 	if err != nil {
-		log.Printf("failed to respond in channel with %q (%s)", text, err)
-		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		log.Printf("failed to respond in channel with %s (%s)", text, err)
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	w.Write(response)
+	slackResponse, err := http.Post(responseURL, "application/json", bytes.NewReader(response))
+	if err != nil {
+		log.Printf("failed to sent in_channel response (%s)", err)
+		return
+	}
+	slackResponse.Body.Close()
 }
