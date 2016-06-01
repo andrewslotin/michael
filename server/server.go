@@ -14,12 +14,20 @@ import (
 	"github.com/andrewslotin/slack-deploy-command/slack"
 )
 
-const HelpMessage = `Available commands:
+const (
+	HelpMessage = `Available commands:
 
 /deploy help — print help (this message)
 /deploy <subject> — announce deploy of <subject> in channel
 /deploy status — show deploy status in channel
 /deploy done — finish deploy`
+	NoRunningDeploysMessage   = "No one is deploying at the moment"
+	DeployStatusMessage       = "%s is deploying %s since %s"
+	DeployConflictMessage     = "%s is deploying since %s. You can type `/deploy done` if you think this deploy is finished."
+	DeployAnnouncementMessage = "%s is about to deploy %s"
+	DeployDoneMessage         = "%s done deploying"
+	DeployInterruptedMessage  = "%s has finished the deploy started by %s"
+)
 
 type Server struct {
 	Addr string
@@ -91,35 +99,32 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	case "status":
 		d, ok := s.deploys.Get(channelID)
 		if !ok {
-			respondToUser(w, "No one is deploying at the moment")
+			respondToUser(w, NoRunningDeploysMessage)
 			return
 		}
 
-		respondToUser(w, fmt.Sprintf("%s is deploying %s since %s", d.User, d.Subject, d.StartedAt.Format(time.RFC822)))
+		respondToUser(w, fmt.Sprintf(DeployStatusMessage, d.User, d.Subject, d.StartedAt.Format(time.RFC822)))
 	case "done":
 		d, _ := s.deploys.Del(channelID)
 
 		var response string
 		if d.User.ID == user.ID {
-			response = fmt.Sprintf("%s done deploying", user)
+			response = fmt.Sprintf(DeployDoneMessage, user)
 		} else {
-			response = fmt.Sprintf("%s has finished the deploy started by %s", user, d.User)
+			response = fmt.Sprintf(DeployInterruptedMessage, user, d.User)
 		}
+
 		go sendDelayedResponse(w, r.PostFormValue("response_url"), response)
 	default:
 		if d, ok := s.deploys.Get(channelID); ok && d.User.ID != user.ID {
-			respondToUser(w, fmt.Sprintf("%s is deploying since %s. You can type `/deploy done` if you think this deploy is finished.", d.User, d.StartedAt.Format(time.RFC822)))
+			respondToUser(w, fmt.Sprintf(DeployConflictMessage, d.User, d.StartedAt.Format(time.RFC822)))
 			return
 		}
 
 		s.deploys.Set(channelID, user, subject)
 		w.Write(nil)
 
-		go sendDelayedResponse(
-			w,
-			r.PostFormValue("response_url"),
-			fmt.Sprintf("%s is about to deploy %s", user, html.EscapeString(subject)),
-		)
+		go sendDelayedResponse(w, r.PostFormValue("response_url"), fmt.Sprintf(DeployAnnouncementMessage, user, html.EscapeString(subject)))
 	}
 }
 
