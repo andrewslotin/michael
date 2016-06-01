@@ -19,7 +19,7 @@ const HelpMessage = `Available commands:
 
 /deploy help — print help (this message)
 /deploy <subject> — announce deploy of <subject> in channel
-Example: ` + "```\n/deploy repository-name#1 repository-name#2\n```" + `
+/deploy status — show deploy status in channel
 /deploy done — finish deploy`
 
 type Server struct {
@@ -79,6 +79,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	channelID := r.PostFormValue("channel_id")
 	user := slack.User{
 		ID:   r.PostFormValue("user_id"),
 		Name: r.PostFormValue("user_name"),
@@ -88,13 +89,19 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	case "", "help":
 		respondToUser(w, html.EscapeString(HelpMessage))
 		return
+	case "status":
+		d, ok := s.deploys.Get(channelID)
+		if !ok {
+			respondToUser(w, "No one is deploying at the moment")
+			return
+		}
+
+		respondToUser(w, fmt.Sprintf("%s is deploying %s since %s", d.User, d.Subject, d.StartedAt.Format(time.RFC822)))
 	case "done":
-		channelID := r.PostFormValue("channel_id")
 		s.deploys.Del(channelID)
 
 		go sendDelayedResponse(w, r.PostFormValue("response_url"), fmt.Sprintf("%s done deploying", user))
 	default:
-		channelID := r.PostFormValue("channel_id")
 		subject = strings.Replace(subject, " ", ", ", strings.Count(subject, " ")-1)
 		subject = strings.Replace(subject, " ", " and ", 1)
 
