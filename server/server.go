@@ -10,6 +10,12 @@ import (
 	"strings"
 )
 
+const HelpMessage = `Available commands:
+
+/deploy help — print help (this message)
+/deploy <subject> — announce deploy of <subject> in channel
+Example: ` + "```\n/deploy repository-name#1 repository-name#2\n```\n"
+
 type Server struct {
 	Addr string
 
@@ -70,20 +76,20 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	subject := r.PostFormValue("text")
-	if subject == "" {
-		respondToUser(w, "Please specify what you are about to deploy.\nExample:\n```\n/deploy repository-name#1 repository-name#2\n```")
+	switch subject := r.PostFormValue("text"); subject {
+	case "", "help":
+		respondToUser(w, HelpMessage)
 		return
+	default:
+		userName := r.PostFormValue("user_name")
+		w.Write(nil)
+
+		go sendDelayedResponse(
+			w,
+			r.PostFormValue("response_url"),
+			fmt.Sprintf("%s is about to deploy %s", userLink(r.PostFormValue("user_id"), userName), strings.Replace(subject, " ", ", ", -1)),
+		)
 	}
-
-	userName := r.PostFormValue("user_name")
-	w.Write(nil)
-
-	go sendDelayedResponse(
-		w,
-		r.PostFormValue("response_url"),
-		fmt.Sprintf("%s is about to deploy %s", userLink(r.PostFormValue("user_id"), userName), strings.Replace(subject, " ", ", ", -1)),
-	)
 }
 
 func userLink(userID, userName string) string {
