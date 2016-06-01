@@ -3,6 +3,8 @@ package main
 import (
 	"flag"
 	"fmt"
+	"log"
+	"net/http"
 	"os"
 )
 
@@ -27,4 +29,16 @@ func init() {
 
 func main() {
 	flag.Parse()
+
+	log.SetOutput(os.Stderr)
+	log.SetFlags(5)
+
+	http.HandleFunc("/", func(w http.ResponseWriter, req *http.Request) {
+		fmt.Fprint(w, "Hi there!")
+	})
+
+	addr := fmt.Sprintf("%s:%d", args.host, args.port)
+	log.Printf("listening on %s", addr)
+
+	log.Fatal(http.ListenAndServe(addr, nil))
 }
