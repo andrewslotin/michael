@@ -11,12 +11,14 @@ import (
 type Server struct {
 	Addr string
 
-	listener net.Listener
+	listener   net.Listener
+	slackToken string
 }
 
-func New(host string, port int) *Server {
+func New(host string, port int, slackToken string) *Server {
 	return &Server{
-		Addr: fmt.Sprintf("%s:%d", host, port),
+		Addr:       fmt.Sprintf("%s:%d", host, port),
+		slackToken: slackToken,
 	}
 }
 
@@ -48,6 +50,11 @@ func (s *Server) Shutdown() {
 func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if r.Method != "POST" {
 		http.Error(w, "Only POST requests are supported", http.StatusBadRequest)
+		return
+	}
+
+	if r.PostFormValue("token") != s.slackToken {
+		http.Error(w, "Invalid token", http.StatusForbidden)
 		return
 	}
 

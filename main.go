@@ -41,7 +41,7 @@ func main() {
 	log.SetOutput(os.Stderr)
 	log.SetFlags(5)
 
-	server := server.New(args.host, args.port)
+	server := server.New(args.host, args.port, token)
 	if err := server.Start(); err != nil {
 		log.Fatal(err)
 	}
