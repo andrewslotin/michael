@@ -4,8 +4,11 @@ import (
 	"flag"
 	"fmt"
 	"log"
-	"net/http"
 	"os"
+	"os/signal"
+	"syscall"
+
+	"github.com/andrewslotin/slack-deploy-command/server"
 )
 
 const (
@@ -33,12 +36,19 @@ func main() {
 	log.SetOutput(os.Stderr)
 	log.SetFlags(5)
 
-	http.HandleFunc("/", func(w http.ResponseWriter, req *http.Request) {
-		fmt.Fprint(w, "Hi there!")
-	})
+	server := server.New(args.host, args.port)
+	if err := server.Start(); err != nil {
+		log.Fatal(err)
+	}
 
-	addr := fmt.Sprintf("%s:%d", args.host, args.port)
-	log.Printf("listening on %s", addr)
+	log.Printf("server is up and running at %s", server.Addr)
 
-	log.Fatal(http.ListenAndServe(addr, nil))
+	signals := make(chan os.Signal)
+	signal.Notify(signals, os.Interrupt, syscall.SIGTERM)
+
+	select {
+	case <-signals:
+		log.Println("signal received, shutting down...")
+		server.Shutdown()
+	}
 }
