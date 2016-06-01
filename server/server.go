@@ -8,7 +8,6 @@ import (
 	"log"
 	"net"
 	"net/http"
-	"strings"
 	"time"
 
 	"github.com/andrewslotin/slack-deploy-command/deploy"
@@ -108,10 +107,6 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		}
 		go sendDelayedResponse(w, r.PostFormValue("response_url"), response)
 	default:
-		subject = strings.Replace(subject, " ", ",", strings.Count(subject, " ")-1)
-		subject = strings.Replace(subject, " ", " and ", 1)
-		subject = strings.Replace(subject, ",", ", ", -1)
-
 		if d, ok := s.deploys.Get(channelID); ok && d.User.ID != user.ID {
 			respondToUser(w, fmt.Sprintf("%s is deploying since %s. You can type `/deploy done` if you think this deploy is finished.", d.User, d.StartedAt.Format(time.RFC822)))
 			return
