@@ -17,7 +17,8 @@ const HelpMessage = `Available commands:
 
 /deploy help — print help (this message)
 /deploy <subject> — announce deploy of <subject> in channel
-Example: ` + "```\n/deploy repository-name#1 repository-name#2\n```\n"
+Example: ` + "```\n/deploy repository-name#1 repository-name#2\n```" + `
+/deploy done — finish deploy`
 
 type Server struct {
 	Addr string
@@ -74,10 +75,19 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	user := slack.User{
+		ID:   r.PostFormValue("user_id"),
+		Name: r.PostFormValue("user_name"),
+	}
+
 	switch subject := r.PostFormValue("text"); subject {
 	case "", "help":
 		respondToUser(w, html.EscapeString(HelpMessage))
 		return
+	case "done":
+		channelID := r.PostFormValue("channel_id")
+
+		go sendDelayedResponse(w, r.PostFormValue("response_url"), fmt.Sprintf("%s done deploying", user))
 	default:
 		w.Write(nil)
 
