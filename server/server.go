@@ -93,6 +93,7 @@ func respondToUser(w http.ResponseWriter, text string) {
 		return
 	}
 
+	w.Header().Set("Content-Type", "application/json")
 	w.Write(response)
 }
 
@@ -107,5 +108,6 @@ func respondInChannel(w http.ResponseWriter, text string) {
 		return
 	}
 
+	w.Header().Set("Content-Type", "application/json")
 	w.Write(response)
 }
