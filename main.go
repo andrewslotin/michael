@@ -34,15 +34,20 @@ func init() {
 func main() {
 	flag.Parse()
 
-	token := os.Getenv("SLACK_TOKEN")
-	if token == "" {
+	slackToken := os.Getenv("SLACK_TOKEN")
+	if slackToken == "" {
 		log.Fatal("Missing SLACK_TOKEN env variable")
 	}
 
 	log.SetOutput(os.Stderr)
 	log.SetFlags(5)
 
-	server := server.New(args.host, args.port, token, deploy.NewStore())
+	githubToken := os.Getenv("GITHUB_TOKEN")
+	if githubToken == "" {
+		log.Printf("GITHUB_TOKEN env variable not set, only public PRs details will be displayed in deploy announcements")
+	}
+
+	server := server.New(args.host, args.port, slackToken, githubToken, deploy.NewStore())
 	if err := server.Start(); err != nil {
 		log.Fatal(err)
 	}

@@ -23,12 +23,12 @@ type Server struct {
 	responses  *ResponseBuilder
 }
 
-func New(host string, port int, slackToken string, deploys *deploy.Store) *Server {
+func New(host string, port int, slackToken, githubToken string, deploys *deploy.Store) *Server {
 	return &Server{
 		Addr:       fmt.Sprintf("%s:%d", host, port),
 		slackToken: slackToken,
 		deploys:    deploys,
-		responses:  NewResponseBuilder(github.NewClient("", nil)),
+		responses:  NewResponseBuilder(github.NewClient(githubToken, nil)),
 	}
 }
 
