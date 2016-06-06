@@ -128,7 +128,16 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		w.Write(nil)
 
 		responseText = fmt.Sprintf(DeployAnnouncementMessage, user, html.EscapeString(subject))
-		go sendDelayedResponse(w, r, slack.NewInChannelResponse(responseText))
+
+		response := slack.NewInChannelResponse(responseText)
+		for _, ref := range deploy.FindReferences(subject) {
+			response.Attachments = append(response.Attachments, slack.Attachment{
+				Title:     ref.Repository + "#" + ref.ID,
+				TitleLink: "https://github.com/" + ref.Repository + "/pulls/" + ref.ID,
+			})
+		}
+
+		go sendDelayedResponse(w, r, response)
 	}
 }
 
