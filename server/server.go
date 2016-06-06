@@ -20,12 +20,11 @@ const (
 /deploy <subject> — announce deploy of <subject> in channel
 /deploy status — show deploy status in channel
 /deploy done — finish deploy`
-	NoRunningDeploysMessage   = "No one is deploying at the moment"
-	DeployStatusMessage       = "%s is deploying %s since %s"
-	DeployConflictMessage     = "%s is deploying since %s. You can type `/deploy done` if you think this deploy is finished."
-	DeployAnnouncementMessage = "%s is about to deploy %s"
-	DeployDoneMessage         = "%s done deploying"
-	DeployInterruptedMessage  = "%s has finished the deploy started by %s"
+	NoRunningDeploysMessage  = "No one is deploying at the moment"
+	DeployStatusMessage      = "%s is deploying %s since %s"
+	DeployConflictMessage    = "%s is deploying since %s. You can type `/deploy done` if you think this deploy is finished."
+	DeployDoneMessage        = "%s done deploying"
+	DeployInterruptedMessage = "%s has finished the deploy started by %s"
 )
 
 type Server struct {
@@ -140,7 +139,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func sendImmediateResponse(w http.ResponseWriter, response slack.Response) {
+func sendImmediateResponse(w http.ResponseWriter, response *slack.Response) {
 	body, err := json.Marshal(response)
 	if err != nil {
 		log.Printf("failed to respond to user with %q (%s)", response.Text, err)
@@ -152,7 +151,7 @@ func sendImmediateResponse(w http.ResponseWriter, response slack.Response) {
 	w.Write(body)
 }
 
-func sendDelayedResponse(w http.ResponseWriter, req *http.Request, response slack.Response) {
+func sendDelayedResponse(w http.ResponseWriter, req *http.Request, response *slack.Response) {
 	responseURL := req.PostFormValue("response_url")
 	if responseURL == "" {
 		log.Printf("cannot send delayed response to a without without response_url")

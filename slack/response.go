@@ -6,15 +6,15 @@ type Response struct {
 	Attachments  []Attachment `json:"attachments,omitempty"`
 }
 
-func NewEphemeralResponse(text string) Response {
-	return Response{
+func NewEphemeralResponse(text string) *Response {
+	return &Response{
 		ResponseType: ResponseTypeEphemeral,
 		Text:         text,
 	}
 }
 
-func NewInChannelResponse(text string) Response {
-	return Response{
+func NewInChannelResponse(text string) *Response {
+	return &Response{
 		ResponseType: ResponseTypeInChannel,
 		Text:         text,
 	}
