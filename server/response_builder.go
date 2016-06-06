@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/andrewslotin/slack-deploy-command/deploy"
+	"github.com/andrewslotin/slack-deploy-command/github"
 	"github.com/andrewslotin/slack-deploy-command/slack"
 )
 
@@ -24,10 +25,12 @@ const (
 	deployAnnouncementMessage = "%s is about to deploy %s"
 )
 
-type ResponseBuilder struct{}
+type ResponseBuilder struct {
+	githubClient *github.Client
+}
 
-func NewResponseBuilder() *ResponseBuilder {
-	return &ResponseBuilder{}
+func NewResponseBuilder(githubClient *github.Client) *ResponseBuilder {
+	return &ResponseBuilder{githubClient: githubClient}
 }
 
 func (b *ResponseBuilder) HelpMessage() *slack.Response {
@@ -58,9 +61,18 @@ func (b *ResponseBuilder) DeployAnnouncement(user slack.User, subject string) *s
 	responseText := fmt.Sprintf(deployAnnouncementMessage, user, slack.EscapeMessage(subject))
 	response := newAnnouncement(responseText)
 	for _, ref := range deploy.FindReferences(subject) {
+		pr, err := b.githubClient.GetPullRequest(ref.Repository, ref.ID)
+		if err != nil {
+			response.Attachments = append(response.Attachments, slack.Attachment{
+				Title:     ref.Repository + "#" + ref.ID,
+				TitleLink: "https://github.com/" + ref.Repository + "/pulls/" + ref.ID,
+			})
+			continue
+		}
+
 		response.Attachments = append(response.Attachments, slack.Attachment{
-			Title:     ref.Repository + "#" + ref.ID,
-			TitleLink: "https://github.com/" + ref.Repository + "/pulls/" + ref.ID,
+			Title:     fmt.Sprintf("PR #%d: %s", pr.Number, slack.EscapeMessage(pr.Title)),
+			TitleLink: pr.URL,
 		})
 	}
 

@@ -10,6 +10,7 @@ import (
 	"net/http"
 
 	"github.com/andrewslotin/slack-deploy-command/deploy"
+	"github.com/andrewslotin/slack-deploy-command/github"
 	"github.com/andrewslotin/slack-deploy-command/slack"
 )
 
@@ -27,7 +28,7 @@ func New(host string, port int, slackToken string, deploys *deploy.Store) *Serve
 		Addr:       fmt.Sprintf("%s:%d", host, port),
 		slackToken: slackToken,
 		deploys:    deploys,
-		responses:  NewResponseBuilder(),
+		responses:  NewResponseBuilder(github.NewClient("", nil)),
 	}
 }
 
