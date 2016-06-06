@@ -90,7 +90,11 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 		sendImmediateResponse(w, s.responses.DeployStatusMessage(d))
 	case "done":
-		d, _ := s.deploys.Del(channelID)
+		d, ok := s.deploys.Del(channelID)
+		if !ok {
+			sendImmediateResponse(w, s.responses.NoRunningDeploysMessage())
+			return
+		}
 
 		if d.User.ID == user.ID {
 			go sendDelayedResponse(w, r, s.responses.DeployDoneAnnouncement(user))
