@@ -1,6 +1,8 @@
 Slack Deploy Command
 ====================
 
+[![Build Status](https://travis-ci.org/andrewslotin/slack-deploy-command.png)](https://travis-ci.org/andrewslotin/slack-deploy-command)
+
 Maintain deploy announcements in Slack channels.
 
 Installation

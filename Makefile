@@ -1,17 +1,27 @@
-container: build compress
-	docker build -t slack-deploy-command .
+NAME := slack-deploy-command
+SOURCES := $(shell find . -name '*.go')
 
-build: slack-deploy-command
+PACKAGES := $$(go list ./... | grep -v /vendor/ | grep -v /cmd/)
+test:
+	go test $(PACKAGES)
+
+build: $(SOURCES)
+	GOGC=off GOOS=linux GOARCH=amd64 go build -o $(NAME)
 
 compress:
 ifeq (, $(shell command -v upx 2>/dev/null))
 	@echo "upx not found in PATH, proceeding with unpacked binary"
 else
-	upx -q slack-deploy-command
+	upx -q $(NAME)
 endif
 
-slack-deploy-command:
-	GOOS=linux GOARCH=amd64 go build
+all: test build
+.DEFAULT_GOAL := all
+
+container: all compress
+	docker build -t $(NAME) .
 
 clean:
 	go clean
+
+.PHONY: 
