@@ -82,7 +82,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if cmd := r.PostFormValue("command"); cmd != "/deploy" {
-		sendImmediateResponse(w, html.EscapeString(fmt.Sprintf("%s is not supported", cmd)))
+		sendImmediateResponse(w, slack.NewEphemeralResponse(fmt.Sprintf("%s is not supported", html.EscapeString(cmd))))
 		return
 	}
 
@@ -94,66 +94,70 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	switch subject := r.PostFormValue("text"); subject {
 	case "", "help":
-		sendImmediateResponse(w, html.EscapeString(HelpMessage))
+		sendImmediateResponse(w, slack.NewEphemeralResponse(html.EscapeString(HelpMessage)))
 		return
 	case "status":
 		d, ok := s.deploys.Get(channelID)
 		if !ok {
-			sendImmediateResponse(w, NoRunningDeploysMessage)
+			sendImmediateResponse(w, slack.NewEphemeralResponse(NoRunningDeploysMessage))
 			return
 		}
 
-		sendImmediateResponse(w, fmt.Sprintf(DeployStatusMessage, d.User, d.Subject, d.StartedAt.Format(time.RFC822)))
+		responseText := fmt.Sprintf(DeployStatusMessage, d.User, d.Subject, d.StartedAt.Format(time.RFC822))
+		sendImmediateResponse(w, slack.NewEphemeralResponse(responseText))
 	case "done":
 		d, _ := s.deploys.Del(channelID)
 
-		var response string
+		var responseText string
 		if d.User.ID == user.ID {
-			response = fmt.Sprintf(DeployDoneMessage, user)
+			responseText = fmt.Sprintf(DeployDoneMessage, user)
 		} else {
-			response = fmt.Sprintf(DeployInterruptedMessage, user, d.User)
+			responseText = fmt.Sprintf(DeployInterruptedMessage, user, d.User)
 		}
 
-		go sendDelayedResponse(w, r, response)
+		go sendDelayedResponse(w, r, slack.NewInChannelResponse(responseText))
 	default:
+		var responseText string
 		if d, ok := s.deploys.Get(channelID); ok && d.User.ID != user.ID {
-			sendImmediateResponse(w, fmt.Sprintf(DeployConflictMessage, d.User, d.StartedAt.Format(time.RFC822)))
+			responseText = fmt.Sprintf(DeployConflictMessage, d.User, d.StartedAt.Format(time.RFC822))
+			sendImmediateResponse(w, slack.NewEphemeralResponse(responseText))
 			return
 		}
 
 		s.deploys.Set(channelID, user, subject)
 		w.Write(nil)
 
-		go sendDelayedResponse(w, r, fmt.Sprintf(DeployAnnouncementMessage, user, html.EscapeString(subject)))
+		responseText = fmt.Sprintf(DeployAnnouncementMessage, user, html.EscapeString(subject))
+		go sendDelayedResponse(w, r, slack.NewInChannelResponse(responseText))
 	}
 }
 
-func sendImmediateResponse(w http.ResponseWriter, text string) {
-	response, err := json.Marshal(slack.NewEphemeralResponse(text))
+func sendImmediateResponse(w http.ResponseWriter, response slack.Response) {
+	body, err := json.Marshal(response)
 	if err != nil {
-		log.Printf("failed to respond to user with %q (%s)", text, err)
+		log.Printf("failed to respond to user with %q (%s)", response.Text, err)
 		http.Error(w, "Internal server error", http.StatusInternalServerError)
 		return
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	w.Write(response)
+	w.Write(body)
 }
 
-func sendDelayedResponse(w http.ResponseWriter, r *http.Request, text string) {
-	responseURL := r.PostFormValue("response_url")
+func sendDelayedResponse(w http.ResponseWriter, req *http.Request, response slack.Response) {
+	responseURL := req.PostFormValue("response_url")
 	if responseURL == "" {
 		log.Printf("cannot send delayed response to a without without response_url")
 		return
 	}
 
-	response, err := json.Marshal(slack.NewInChannelResponse(text))
+	body, err := json.Marshal(response)
 	if err != nil {
-		log.Printf("failed to respond in channel with %s (%s)", text, err)
+		log.Printf("failed to respond in channel with %s (%s)", response.Text, err)
 		return
 	}
 
-	slackResponse, err := http.Post(responseURL, "application/json", bytes.NewReader(response))
+	slackResponse, err := http.Post(responseURL, "application/json", bytes.NewReader(body))
 	if err != nil {
 		log.Printf("failed to sent in_channel response (%s)", err)
 		return
