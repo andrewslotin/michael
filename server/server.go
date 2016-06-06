@@ -3,29 +3,14 @@ package server
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log"
 	"net"
 	"net/http"
-	"time"
 
 	"github.com/andrewslotin/slack-deploy-command/deploy"
 	"github.com/andrewslotin/slack-deploy-command/slack"
-)
-
-const (
-	HelpMessage = `Available commands:
-
-/deploy help — print help (this message)
-/deploy <subject> — announce deploy of <subject> in channel
-/deploy status — show deploy status in channel
-/deploy done — finish deploy`
-	NoRunningDeploysMessage   = "No one is deploying at the moment"
-	DeployStatusMessage       = "%s is deploying %s since %s"
-	DeployConflictMessage     = "%s is deploying since %s. You can type `/deploy done` if you think this deploy is finished."
-	DeployDoneMessage         = "%s done deploying"
-	DeployInterruptedMessage  = "%s has finished the deploy started by %s"
-	DeployAnnouncementMessage = "%s is about to deploy %s"
 )
 
 type Server struct {
@@ -34,6 +19,7 @@ type Server struct {
 	listener   net.Listener
 	slackToken string
 	deploys    *deploy.Store
+	responses  *ResponseBuilder
 }
 
 func New(host string, port int, slackToken string, deploys *deploy.Store) *Server {
@@ -41,6 +27,7 @@ func New(host string, port int, slackToken string, deploys *deploy.Store) *Serve
 		Addr:       fmt.Sprintf("%s:%d", host, port),
 		slackToken: slackToken,
 		deploys:    deploys,
+		responses:  NewResponseBuilder(),
 	}
 }
 
@@ -81,7 +68,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if cmd := r.PostFormValue("command"); cmd != "/deploy" {
-		sendImmediateResponse(w, slack.NewEphemeralResponse(fmt.Sprintf("%s is not supported", slack.EscapeMessage(cmd))))
+		sendImmediateResponse(w, s.responses.ErrorMessage(cmd, errors.New("not supported")))
 		return
 	}
 
@@ -93,50 +80,33 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	switch subject := r.PostFormValue("text"); subject {
 	case "", "help":
-		sendImmediateResponse(w, slack.NewEphemeralResponse(slack.EscapeMessage(HelpMessage)))
-		return
+		sendImmediateResponse(w, s.responses.HelpMessage())
 	case "status":
 		d, ok := s.deploys.Get(channelID)
 		if !ok {
-			sendImmediateResponse(w, slack.NewEphemeralResponse(NoRunningDeploysMessage))
+			sendImmediateResponse(w, s.responses.NoRunningDeploysMessage())
 			return
 		}
 
-		responseText := fmt.Sprintf(DeployStatusMessage, d.User, d.Subject, d.StartedAt.Format(time.RFC822))
-		sendImmediateResponse(w, slack.NewEphemeralResponse(responseText))
+		sendImmediateResponse(w, s.responses.DeployStatusMessage(d))
 	case "done":
 		d, _ := s.deploys.Del(channelID)
 
-		var responseText string
 		if d.User.ID == user.ID {
-			responseText = fmt.Sprintf(DeployDoneMessage, user)
+			go sendDelayedResponse(w, r, s.responses.DeployDoneAnnouncement(user))
 		} else {
-			responseText = fmt.Sprintf(DeployInterruptedMessage, user, d.User)
+			go sendDelayedResponse(w, r, s.responses.DeployInterruptedAnnouncement(d, user))
 		}
-
-		go sendDelayedResponse(w, r, slack.NewInChannelResponse(responseText))
 	default:
-		var responseText string
 		if d, ok := s.deploys.Get(channelID); ok && d.User.ID != user.ID {
-			responseText = fmt.Sprintf(DeployConflictMessage, d.User, d.StartedAt.Format(time.RFC822))
-			sendImmediateResponse(w, slack.NewEphemeralResponse(responseText))
+			sendImmediateResponse(w, s.responses.DeployInProgressMessage(d))
 			return
 		}
 
 		s.deploys.Set(channelID, user, subject)
 		w.Write(nil)
 
-		responseText = fmt.Sprintf(DeployAnnouncementMessage, user, slack.EscapeMessage(subject))
-
-		response := slack.NewInChannelResponse(responseText)
-		for _, ref := range deploy.FindReferences(subject) {
-			response.Attachments = append(response.Attachments, slack.Attachment{
-				Title:     ref.Repository + "#" + ref.ID,
-				TitleLink: "https://github.com/" + ref.Repository + "/pulls/" + ref.ID,
-			})
-		}
-
-		go sendDelayedResponse(w, r, response)
+		go sendDelayedResponse(w, r, s.responses.DeployAnnouncement(user, subject))
 	}
 }
 
