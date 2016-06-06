@@ -92,7 +92,7 @@ func TestResponseBuilder_DeployAnnouncement(t *testing.T) {
 	defer teardown()
 
 	mux.HandleFunc("/repos/user1/repo1/pulls/123", func(w http.ResponseWriter, req *http.Request) {
-		w.Write([]byte(`{"number":123,"title":"Hello","body":"PR description","html_url":"http://xyz.abc","user":{"name":"andrewslotin"}}`))
+		w.Write([]byte(`{"number":123,"title":"Hello","body":"PR description","html_url":"http://xyz.abc","user":{"login":"andrewslotin"}}`))
 	})
 	mux.HandleFunc("/repos/user2/repo2/pulls/234", func(w http.ResponseWriter, req *http.Request) {
 		http.Error(w, http.StatusText(http.StatusNotFound), http.StatusNotFound)
@@ -113,9 +113,13 @@ func TestResponseBuilder_DeployAnnouncement(t *testing.T) {
 	if assert.Len(t, response.Attachments, 2) {
 		assert.Equal(t, "PR #123: Hello", response.Attachments[0].Title)
 		assert.Equal(t, "http://xyz.abc", response.Attachments[0].TitleLink)
+		assert.Equal(t, "PR description", response.Attachments[0].Text)
+		assert.Equal(t, "andrewslotin", response.Attachments[0].AuthorName)
 
 		assert.Equal(t, "user2/repo2#234", response.Attachments[1].Title)
 		assert.Equal(t, "https://github.com/user2/repo2/pulls/234", response.Attachments[1].TitleLink)
+		assert.Empty(t, response.Attachments[1].Text)
+		assert.Empty(t, response.Attachments[1].AuthorName)
 	}
 }
 

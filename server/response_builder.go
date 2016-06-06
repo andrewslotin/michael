@@ -71,8 +71,10 @@ func (b *ResponseBuilder) DeployAnnouncement(user slack.User, subject string) *s
 		}
 
 		response.Attachments = append(response.Attachments, slack.Attachment{
-			Title:     fmt.Sprintf("PR #%d: %s", pr.Number, slack.EscapeMessage(pr.Title)),
-			TitleLink: pr.URL,
+			AuthorName: pr.Author.Name,
+			Title:      fmt.Sprintf("PR #%d: %s", pr.Number, slack.EscapeMessage(pr.Title)),
+			TitleLink:  pr.URL,
+			Text:       pr.Body,
 		})
 	}
 
