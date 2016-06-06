@@ -20,11 +20,12 @@ const (
 /deploy <subject> — announce deploy of <subject> in channel
 /deploy status — show deploy status in channel
 /deploy done — finish deploy`
-	NoRunningDeploysMessage  = "No one is deploying at the moment"
-	DeployStatusMessage      = "%s is deploying %s since %s"
-	DeployConflictMessage    = "%s is deploying since %s. You can type `/deploy done` if you think this deploy is finished."
-	DeployDoneMessage        = "%s done deploying"
-	DeployInterruptedMessage = "%s has finished the deploy started by %s"
+	NoRunningDeploysMessage   = "No one is deploying at the moment"
+	DeployStatusMessage       = "%s is deploying %s since %s"
+	DeployConflictMessage     = "%s is deploying since %s. You can type `/deploy done` if you think this deploy is finished."
+	DeployDoneMessage         = "%s done deploying"
+	DeployInterruptedMessage  = "%s has finished the deploy started by %s"
+	DeployAnnouncementMessage = "%s is about to deploy %s"
 )
 
 type Server struct {
