@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"html"
 	"log"
 	"net"
 	"net/http"
@@ -82,7 +81,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if cmd := r.PostFormValue("command"); cmd != "/deploy" {
-		sendImmediateResponse(w, slack.NewEphemeralResponse(fmt.Sprintf("%s is not supported", html.EscapeString(cmd))))
+		sendImmediateResponse(w, slack.NewEphemeralResponse(fmt.Sprintf("%s is not supported", slack.EscapeMessage(cmd))))
 		return
 	}
 
@@ -94,7 +93,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	switch subject := r.PostFormValue("text"); subject {
 	case "", "help":
-		sendImmediateResponse(w, slack.NewEphemeralResponse(html.EscapeString(HelpMessage)))
+		sendImmediateResponse(w, slack.NewEphemeralResponse(slack.EscapeMessage(HelpMessage)))
 		return
 	case "status":
 		d, ok := s.deploys.Get(channelID)
@@ -127,7 +126,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		s.deploys.Set(channelID, user, subject)
 		w.Write(nil)
 
-		responseText = fmt.Sprintf(DeployAnnouncementMessage, user, html.EscapeString(subject))
+		responseText = fmt.Sprintf(DeployAnnouncementMessage, user, slack.EscapeMessage(subject))
 
 		response := slack.NewInChannelResponse(responseText)
 		for _, ref := range deploy.FindReferences(subject) {
