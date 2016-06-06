@@ -31,6 +31,10 @@ SLACK_TOKEN=<token you copied before> $GOPATH/bin/slack-deploy-command
 
 This will run a server listening on `0.0.0.0:8081`. Check `$GOPATH/bin/slack-deploy-command --help` to see available options.
 
+Optionally you may provide your [GitHub personal access token](https://github.com/settings/tokens) with `repo` permissions by
+setting `GITHUB_TOKEN` environment variable. This token is used to get PR details (title, description and author) and attach them to an announcement.
+If no token is provided only public pull requests will be have detailed information, and others will only contain a link to GitHub.
+
 Usage
 -----
 
