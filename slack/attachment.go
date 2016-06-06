@@ -1,6 +1,8 @@
 package slack
 
 type Attachment struct {
-	Title     string `json:"title"`
-	TitleLink string `json:"title_link,omitempty"`
+	AuthorName string `json:"author_name,omitempty"`
+	Title      string `json:"title"`
+	TitleLink  string `json:"title_link,omitempty"`
+	Text       string `json:"text,omitempty"`
 }
