@@ -15,8 +15,8 @@ import (
 )
 
 type DeployEventHandler interface {
-	DeployStarted(channelID string) error
-	DeployCompleted(channelID string) error
+	DeployStarted(channelID string)
+	DeployCompleted(channelID string)
 }
 
 type Server struct {

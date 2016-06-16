@@ -5,7 +5,9 @@ PACKAGES := $$(go list ./... | grep -v /vendor/ | grep -v /cmd/)
 test:
 	go test $(PACKAGES)
 
-build: $(SOURCES)
+build: slack-deploy-command
+
+slack-deploy-command: $(SOURCES)
 	GOGC=off GOOS=linux GOARCH=amd64 go build -o $(NAME)
 
 compress:
