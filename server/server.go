@@ -14,6 +14,11 @@ import (
 	"github.com/andrewslotin/slack-deploy-command/slack"
 )
 
+type DeployEventHandler interface {
+	DeployStarted(channelID string) error
+	DeployCompleted(channelID string) error
+}
+
 type Server struct {
 	Addr string
 
@@ -21,6 +26,8 @@ type Server struct {
 	slackToken string
 	deploys    *deploy.Store
 	responses  *ResponseBuilder
+
+	deployEventHandlers []DeployEventHandler
 }
 
 func New(host string, port int, slackToken, githubToken string, deploys *deploy.Store) *Server {
@@ -51,6 +58,10 @@ func (s *Server) Start() error {
 	}()
 
 	return nil
+}
+
+func (s *Server) AddDeployEventHandler(h DeployEventHandler) {
+	s.deployEventHandlers = append(s.deployEventHandlers, h)
 }
 
 func (s *Server) Shutdown() {
@@ -102,6 +113,10 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		} else {
 			go sendDelayedResponse(w, r, s.responses.DeployInterruptedAnnouncement(d, user))
 		}
+
+		for _, h := range s.deployEventHandlers {
+			go h.DeployCompleted(channelID)
+		}
 	default:
 		if d, ok := s.deploys.Get(channelID); ok && d.User.ID != user.ID {
 			sendImmediateResponse(w, s.responses.DeployInProgressMessage(d))
@@ -112,6 +127,9 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		w.Write(nil)
 
 		go sendDelayedResponse(w, r, s.responses.DeployAnnouncement(user, subject))
+		for _, h := range s.deployEventHandlers {
+			go h.DeployStarted(channelID)
+		}
 	}
 }
 
