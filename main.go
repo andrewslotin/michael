@@ -10,6 +10,7 @@ import (
 
 	"github.com/andrewslotin/slack-deploy-command/deploy"
 	"github.com/andrewslotin/slack-deploy-command/server"
+	"github.com/andrewslotin/slack-deploy-command/slack"
 )
 
 const (
@@ -47,12 +48,20 @@ func main() {
 		log.Printf("GITHUB_TOKEN env variable not set, only public PRs details will be displayed in deploy announcements")
 	}
 
-	server := server.New(args.host, args.port, slackToken, githubToken, deploy.NewStore())
-	if err := server.Start(); err != nil {
+	srv := server.New(args.host, args.port, slackToken, githubToken, deploy.NewStore())
+
+	if slackWebAPIToken := os.Getenv("SLACK_WEBAPI_TOKEN"); slackWebAPIToken != "" {
+		api := slack.NewWebAPI(slackWebAPIToken, nil)
+		srv.AddDeployEventHandler(server.NewSlackTopicManager(api))
+	} else {
+		log.Printf("SLACK_WEBAPI_TOKEN env variable not set, channel topic notifications are disabled")
+	}
+
+	if err := srv.Start(); err != nil {
 		log.Fatal(err)
 	}
 
-	log.Printf("server is up and running at %s", server.Addr)
+	log.Printf("server is up and running at %s", srv.Addr)
 
 	signals := make(chan os.Signal)
 	signal.Notify(signals, os.Interrupt, syscall.SIGTERM)
@@ -60,6 +69,6 @@ func main() {
 	select {
 	case <-signals:
 		log.Println("signal received, shutting down...")
-		server.Shutdown()
+		srv.Shutdown()
 	}
 }
