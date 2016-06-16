@@ -2,6 +2,7 @@ package slack
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -42,100 +43,80 @@ func NewWebAPI(token string, httpClient *http.Client) *WebAPI {
 func (api *WebAPI) SetChannelTopic(channelID, topic string) error {
 	const method = "channels.setTopic"
 
-	req, err := api.newRequestWithToken(method)
-	if err != nil {
-		return err
-	}
+	params := url.Values{}
+	params.Add("channel_id", channelID)
+	params.Add("topic", topic)
 
-	q := req.URL.Query()
-	q.Add("channel_id", channelID)
-	q.Add("topic", topic)
-	req.URL.RawQuery = q.Encode()
-
-	resp, err := api.c.Do(req)
-	if err != nil {
-		return wrapError(fmt.Errorf("failed to call method (%s)", err), method, req.URL)
-	}
-	defer resp.Body.Close()
-
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return wrapError(fmt.Errorf("failed to read response body (%s)", err), method, req.URL)
-	}
-
-	if resp.StatusCode >= http.StatusBadRequest {
-		return wrapError(fmt.Errorf("WebAPI responded with HTTP %d %q", resp.StatusCode, body), method, req.URL)
-	}
-
-	var v struct {
-		Ok    bool   `json:"ok"`
-		Error string `json:"error"`
-	}
-	if err := json.Unmarshal(body, &v); err != nil {
-		return wrapError(fmt.Errorf("failed to decode response body %q (%s)", body, err), method, req.URL)
-	}
-
-	if !v.Ok {
-		return wrapError(fmt.Errorf("WebAPI returned error (%s)", v.Error), method, req.URL)
-	}
-
-	return nil
+	_, _, err := api.Call(method, params)
+	return err
 }
 
 func (api *WebAPI) GetChannelTopic(channelID string) (string, error) {
 	const method = "channels.getTopic"
 
-	req, err := api.newRequestWithToken(method)
+	params := url.Values{}
+	params.Add("channel_id", channelID)
+
+	resp, requestURL, err := api.Call(method, params)
 	if err != nil {
 		return "", err
 	}
 
-	q := req.URL.Query()
-	q.Add("channel_id", channelID)
-	req.URL.RawQuery = q.Encode()
-
-	resp, err := api.c.Do(req)
-	if err != nil {
-		return "", wrapError(fmt.Errorf("failed to call method (%s)", err), method, req.URL)
-	}
-	defer resp.Body.Close()
-
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return "", wrapError(fmt.Errorf("failed to read response body (%s)", err), method, req.URL)
-	}
-
-	if resp.StatusCode >= http.StatusBadRequest {
-		return "", wrapError(fmt.Errorf("WebAPI responded with HTTP %d %q", resp.StatusCode, body), method, req.URL)
-	}
-
 	var v struct {
-		Ok    bool   `json:"ok"`
 		Topic string `json:"topic"`
-		Error string `json:"error"`
 	}
-	if err := json.Unmarshal(body, &v); err != nil {
-		return "", wrapError(fmt.Errorf("failed to decode response body %q (%s)", body, err), method, req.URL)
-	}
-
-	if !v.Ok {
-		return "", wrapError(fmt.Errorf("WebAPI returned error (%s)", v.Error), method, req.URL)
+	if err := json.Unmarshal(resp, &v); err != nil {
+		return "", wrapError(fmt.Errorf("failed to decode response body %q (%s)", resp, err), method, requestURL)
 	}
 
 	return v.Topic, nil
 }
 
-func (api *WebAPI) newRequestWithToken(method string) (*http.Request, error) {
+func (api *WebAPI) Call(method string, params url.Values) (response []byte, u *url.URL, err error) {
 	req, err := http.NewRequest("GET", api.BaseURL+"/"+method, nil)
 	if err != nil {
-		return nil, wrapError(fmt.Errorf("failed to build WebAPI request (%s)", err), method, nil)
+		return nil, &url.URL{Opaque: api.BaseURL + "/" + method}, wrapError(fmt.Errorf("failed to build WebAPI request (%s)", err), method, nil)
 	}
 
-	q := req.URL.Query()
-	q.Add("token", api.token)
-	req.URL.RawQuery = q.Encode()
+	if params == nil {
+		params = url.Values{}
+	}
 
-	return req, nil
+	params.Add("token", api.token)
+	req.URL.RawQuery = params.Encode()
+
+	resp, err := api.c.Do(req)
+	if err != nil {
+		return nil, req.URL, wrapError(fmt.Errorf("failed to call method (%s)", err), method, req.URL)
+	}
+	defer resp.Body.Close()
+
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, req.URL, wrapError(fmt.Errorf("failed to read response body (%s)", err), method, req.URL)
+	}
+
+	if resp.StatusCode >= http.StatusBadRequest {
+		return nil, req.URL, wrapError(fmt.Errorf("WebAPI responded with HTTP %d %q", resp.StatusCode, body), method, req.URL)
+	}
+
+	var v struct {
+		Ok    bool   `json:"ok"`
+		Error string `json:"error"`
+	}
+	if err := json.Unmarshal(body, &v); err != nil {
+		return nil, req.URL, wrapError(fmt.Errorf("failed to decode response body %q (%s)", body, err), method, req.URL)
+	}
+
+	if !v.Ok {
+		if v.Error != "" {
+			return nil, req.URL, wrapError(fmt.Errorf("WebAPI returned error (%s)", v.Error), method, req.URL)
+		} else {
+			return nil, req.URL, wrapError(errors.New("WebAPI returned unknown error"), method, req.URL)
+		}
+	}
+
+	return body, req.URL, nil
 }
 
 func wrapError(err error, method string, url *url.URL) *WebAPIError {
