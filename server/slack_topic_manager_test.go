@@ -1,0 +1,142 @@
+package server_test
+
+import (
+	"fmt"
+	"net/http"
+	"net/http/httptest"
+	"strings"
+	"testing"
+
+	"github.com/andrewslotin/slack-deploy-command/server"
+	"github.com/andrewslotin/slack-deploy-command/slack"
+	"github.com/stretchr/testify/assert"
+)
+
+const webAPIToken = "xxxx-token-abc12"
+
+type SlackChannel struct {
+	ID, Topic string
+}
+
+func TestSlackTopicManager_DeployStarted_NoRunningDeploy(t *testing.T) {
+	baseURL, channel, teardown := setupSlackWebAPITestServer(t)
+	defer teardown()
+
+	channel.ID = "CHANNELID1"
+	channel.Topic = "-=:poop:" + strings.Repeat(server.DeployDoneEmotion, 3) + ":poop:=-"
+
+	webAPI := slack.NewWebAPI(webAPIToken, nil)
+	webAPI.BaseURL = baseURL
+
+	mgr := server.NewSlackTopicManager(webAPI)
+	mgr.DeployStarted(channel.ID)
+
+	assert.Equal(t, "-=:poop:"+strings.Repeat(server.DeployInProgressEmotion, 3)+":poop:=-", channel.Topic)
+}
+
+func TestSlackTopicManager_DeployStarted_NoTopicNotification(t *testing.T) {
+	baseURL, channel, teardown := setupSlackWebAPITestServer(t)
+	defer teardown()
+
+	channel.ID = "CHANNELID1"
+	channel.Topic = "-=:poop:=-"
+
+	webAPI := slack.NewWebAPI(webAPIToken, nil)
+	webAPI.BaseURL = baseURL
+
+	mgr := server.NewSlackTopicManager(webAPI)
+	mgr.DeployStarted(channel.ID)
+
+	assert.Equal(t, "-=:poop:=-", channel.Topic)
+}
+
+func TestSlackTopicManager_DeployStarted_InProgress(t *testing.T) {
+	baseURL, channel, teardown := setupSlackWebAPITestServer(t)
+	defer teardown()
+
+	channel.ID = "CHANNELID1"
+	channel.Topic = "-=:poop:" + strings.Repeat(server.DeployInProgressEmotion, 3) + ":poop:=-"
+
+	webAPI := slack.NewWebAPI(webAPIToken, nil)
+	webAPI.BaseURL = baseURL
+
+	mgr := server.NewSlackTopicManager(webAPI)
+	mgr.DeployStarted(channel.ID)
+
+	assert.Equal(t, "-=:poop:"+strings.Repeat(server.DeployInProgressEmotion, 3)+":poop:=-", channel.Topic)
+}
+
+func TestSlackTopicManager_DeployCompleted_InProgress(t *testing.T) {
+	baseURL, channel, teardown := setupSlackWebAPITestServer(t)
+	defer teardown()
+
+	channel.ID = "CHANNELID1"
+	channel.Topic = "-=:poop:" + strings.Repeat(server.DeployInProgressEmotion, 3) + ":poop:=-"
+
+	webAPI := slack.NewWebAPI(webAPIToken, nil)
+	webAPI.BaseURL = baseURL
+
+	mgr := server.NewSlackTopicManager(webAPI)
+	mgr.DeployCompleted(channel.ID)
+
+	assert.Equal(t, "-=:poop:"+strings.Repeat(server.DeployDoneEmotion, 3)+":poop:=-", channel.Topic)
+}
+
+func TestSlackTopicManager_DeployCompleted_NoTopicNotification(t *testing.T) {
+	baseURL, channel, teardown := setupSlackWebAPITestServer(t)
+	defer teardown()
+
+	channel.ID = "CHANNELID1"
+	channel.Topic = "-=:poop:=-"
+
+	webAPI := slack.NewWebAPI(webAPIToken, nil)
+	webAPI.BaseURL = baseURL
+
+	mgr := server.NewSlackTopicManager(webAPI)
+	mgr.DeployCompleted(channel.ID)
+
+	assert.Equal(t, "-=:poop:=-", channel.Topic)
+}
+
+func TestSlackTopicManager_DeployCompleted_NoRunningDeploy(t *testing.T) {
+	baseURL, channel, teardown := setupSlackWebAPITestServer(t)
+	defer teardown()
+
+	channel.ID = "CHANNELID1"
+	channel.Topic = "-=:poop:" + strings.Repeat(server.DeployDoneEmotion, 3) + ":poop:=-"
+
+	webAPI := slack.NewWebAPI(webAPIToken, nil)
+	webAPI.BaseURL = baseURL
+
+	mgr := server.NewSlackTopicManager(webAPI)
+	mgr.DeployCompleted(channel.ID)
+
+	assert.Equal(t, "-=:poop:"+strings.Repeat(server.DeployDoneEmotion, 3)+":poop:=-", channel.Topic)
+}
+
+func setupSlackWebAPITestServer(t *testing.T) (baseURL string, channel *SlackChannel, teardownFn func()) {
+	channel = &SlackChannel{}
+	mux := http.NewServeMux()
+	server := httptest.NewServer(mux)
+
+	mux.HandleFunc("/channels.getTopic", func(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprintf(w, `{"ok":true,"topic":"%s"}`, channel.Topic)
+	})
+
+	mux.HandleFunc("/channels.setTopic", func(w http.ResponseWriter, r *http.Request) {
+		if token := r.FormValue("token"); !assert.Equal(t, webAPIToken, token) {
+			fmt.Fprintf(w, `{"ok":false,"error":"wrong token %q"}`, token)
+			return
+		}
+
+		if ch := r.FormValue("channel_id"); !assert.Equal(t, channel.ID, ch) {
+			fmt.Fprintf(w, `{"ok":false,"error":"wrong channel %q"}`, ch)
+			return
+		}
+
+		channel.Topic = r.FormValue("topic")
+		fmt.Fprint(w, `{"ok":true}`)
+	})
+
+	return server.URL, channel, server.Close
+}
