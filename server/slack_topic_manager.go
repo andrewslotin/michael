@@ -21,9 +21,12 @@ func NewSlackTopicManager(webAPIClient *slack.WebAPI) *SlackTopicManager {
 }
 
 func (mgr *SlackTopicManager) DeployStarted(channelID string) {
-	topic, err := mgr.api.GetChannelTopic(channelID)
+	currentTopic, err := mgr.api.GetChannelTopic(channelID)
 	if err == nil {
-		err = mgr.api.SetChannelTopic(channelID, strings.Replace(topic, DeployDoneEmotion, DeployInProgressEmotion, -1))
+		newTopic := strings.Replace(currentTopic, DeployDoneEmotion, DeployInProgressEmotion, -1)
+		if newTopic != currentTopic {
+			err = mgr.api.SetChannelTopic(channelID, newTopic)
+		}
 	}
 
 	if err != nil {
@@ -32,9 +35,12 @@ func (mgr *SlackTopicManager) DeployStarted(channelID string) {
 }
 
 func (mgr *SlackTopicManager) DeployCompleted(channelID string) {
-	topic, err := mgr.api.GetChannelTopic(channelID)
+	currentTopic, err := mgr.api.GetChannelTopic(channelID)
 	if err == nil {
-		err = mgr.api.SetChannelTopic(channelID, strings.Replace(topic, DeployInProgressEmotion, DeployDoneEmotion, -1))
+		newTopic := strings.Replace(currentTopic, DeployInProgressEmotion, DeployDoneEmotion, -1)
+		if newTopic != currentTopic {
+			err = mgr.api.SetChannelTopic(channelID, newTopic)
+		}
 	}
 
 	if err != nil {
