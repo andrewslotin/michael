@@ -77,7 +77,7 @@ func TestWebAPI_Call_WebAPIError(t *testing.T) {
 	_, _, err := api.Call("methodName", url.Values{})
 	require.Equal(t, 1, requestNum)
 
-	if assert.EqualError(t, err, "WebAPI returned error (an error occurred)") {
+	if assert.Error(t, err) {
 		var slackErr *slack.WebAPIError
 		if assert.IsType(t, slackErr, err) {
 			slackErr = err.(*slack.WebAPIError)
@@ -103,7 +103,7 @@ func TestWebAPI_Call_HTTPError(t *testing.T) {
 	_, _, err := api.Call("methodName", url.Values{})
 	require.Equal(t, 1, requestNum)
 
-	if assert.EqualError(t, err, `WebAPI responded with HTTP 500 "An error occurred\n"`) {
+	if assert.Error(t, err) {
 		var slackErr *slack.WebAPIError
 		if assert.IsType(t, slackErr, err) {
 			slackErr = err.(*slack.WebAPIError)
@@ -119,12 +119,12 @@ func TestWebAPI_ChannelsSetTopic(t *testing.T) {
 
 	var requestNum int
 	mux.HandleFunc("/channels.setTopic", func(w http.ResponseWriter, r *http.Request) {
-		assert.Equal(t, "CHANNELID1", r.FormValue("channel_id"))
+		assert.Equal(t, "CHANNELID1", r.FormValue("channel"))
 		assert.Equal(t, "xxxx-token-12345", r.FormValue("token"))
 		assert.Equal(t, "Example topic", r.FormValue("topic"))
 
 		requestNum++
-		w.Write([]byte(`{"ok":true,"topic":"Example topic"}`))
+		w.Write([]byte(`{"ok":true,"channel":{"topic":{"value":"Example topic"}}}`))
 	})
 
 	api := slack.NewWebAPI("xxxx-token-12345", nil)
@@ -140,7 +140,7 @@ func TestWebAPI_ChannelsSetTopic_ErrorHandling(t *testing.T) {
 
 	var requestNum int
 	mux.HandleFunc("/channels.setTopic", func(w http.ResponseWriter, r *http.Request) {
-		assert.Equal(t, "CHANNELID1", r.FormValue("channel_id"))
+		assert.Equal(t, "CHANNELID1", r.FormValue("channel"))
 		assert.Equal(t, "xxxx-token-12345", r.FormValue("token"))
 		assert.Equal(t, "Example topic", r.FormValue("topic"))
 
@@ -161,12 +161,12 @@ func TestWebAPI_ChannelsGetTopic(t *testing.T) {
 	defer teardown()
 
 	var requestNum int
-	mux.HandleFunc("/channels.getTopic", func(w http.ResponseWriter, r *http.Request) {
-		assert.Equal(t, "CHANNELID1", r.FormValue("channel_id"))
+	mux.HandleFunc("/channels.info", func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, "CHANNELID1", r.FormValue("channel"))
 		assert.Equal(t, "xxxx-token-12345", r.FormValue("token"))
 
 		requestNum++
-		w.Write([]byte(`{"ok":true,"topic":"Example topic"}`))
+		w.Write([]byte(`{"ok":true,"channel":{"topic":{"value":"Example topic"}}}`))
 	})
 
 	api := slack.NewWebAPI("xxxx-token-12345", nil)
@@ -184,8 +184,8 @@ func TestWebAPI_ChannelsGetTopic_ErrorHandling(t *testing.T) {
 	defer teardown()
 
 	var requestNum int
-	mux.HandleFunc("/channels.getTopic", func(w http.ResponseWriter, r *http.Request) {
-		assert.Equal(t, "CHANNELID1", r.FormValue("channel_id"))
+	mux.HandleFunc("/channels.info", func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, "CHANNELID1", r.FormValue("channel"))
 		assert.Equal(t, "xxxx-token-12345", r.FormValue("token"))
 
 		requestNum++

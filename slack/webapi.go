@@ -16,7 +16,7 @@ type WebAPIError struct {
 }
 
 func (e *WebAPIError) Error() string {
-	return e.Response
+	return fmt.Sprintf("%s (method: %s, url: %s)", e.Response, e.Method, e.URL)
 }
 
 type WebAPI struct {
@@ -44,7 +44,7 @@ func (api *WebAPI) SetChannelTopic(channelID, topic string) error {
 	const method = "channels.setTopic"
 
 	params := url.Values{}
-	params.Add("channel_id", channelID)
+	params.Add("channel", channelID)
 	params.Add("topic", topic)
 
 	_, _, err := api.Call(method, params)
@@ -52,10 +52,10 @@ func (api *WebAPI) SetChannelTopic(channelID, topic string) error {
 }
 
 func (api *WebAPI) GetChannelTopic(channelID string) (string, error) {
-	const method = "channels.getTopic"
+	const method = "channels.info"
 
 	params := url.Values{}
-	params.Add("channel_id", channelID)
+	params.Add("channel", channelID)
 
 	resp, requestURL, err := api.Call(method, params)
 	if err != nil {
@@ -63,13 +63,17 @@ func (api *WebAPI) GetChannelTopic(channelID string) (string, error) {
 	}
 
 	var v struct {
-		Topic string `json:"topic"`
+		Channel struct {
+			Topic struct {
+				Value string `json:"value"`
+			} `json:"topic"`
+		} `json:"channel"`
 	}
 	if err := json.Unmarshal(resp, &v); err != nil {
 		return "", wrapError(fmt.Errorf("failed to decode response body %q (%s)", resp, err), method, requestURL)
 	}
 
-	return v.Topic, nil
+	return v.Channel.Topic.Value, nil
 }
 
 func (api *WebAPI) Call(method string, params url.Values) (response []byte, u *url.URL, err error) {

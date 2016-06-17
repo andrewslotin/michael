@@ -119,8 +119,8 @@ func setupSlackWebAPITestServer(t *testing.T) (baseURL string, channel *SlackCha
 	mux := http.NewServeMux()
 	server := httptest.NewServer(mux)
 
-	mux.HandleFunc("/channels.getTopic", func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprintf(w, `{"ok":true,"topic":"%s"}`, channel.Topic)
+	mux.HandleFunc("/channels.info", func(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprintf(w, `{"ok":true,"channel":{"topic":{"value":"%s"}}}`, channel.Topic)
 	})
 
 	mux.HandleFunc("/channels.setTopic", func(w http.ResponseWriter, r *http.Request) {
@@ -129,7 +129,7 @@ func setupSlackWebAPITestServer(t *testing.T) (baseURL string, channel *SlackCha
 			return
 		}
 
-		if ch := r.FormValue("channel_id"); !assert.Equal(t, channel.ID, ch) {
+		if ch := r.FormValue("channel"); !assert.Equal(t, channel.ID, ch) {
 			fmt.Fprintf(w, `{"ok":false,"error":"wrong channel %q"}`, ch)
 			return
 		}
