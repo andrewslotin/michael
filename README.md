@@ -56,6 +56,18 @@ Deploys are tracked per channel. This means that different channels can run diff
     You can also finish a deploy started by another user.
     ![Complete unfinished deploy](../master/docs/deploy-finish-other.jpg)
 
+### Deploy status in channel topic
+
+In addition to announcing deploys in channel you may find it useful to have a small sign in the channel topic. This way you can quickly check
+if it's safe to deploy. Slack deploy command uses :white_check_mark: and :no_entry: to mark channel as clear for deployment and show that there
+is a deploy in progress. To use this feature you need to provide [Slack Web API token](https://api.slack.com/docs/oauth-test-tokens) in
+`SLACK_WEBAPI_TOKEN` environment variable and add either `:white_check_mark:` or `:no_entry:` to the channel topic. Whenever the deploy changes
+the deploy bot will swap these emojis.
+
+![Channel topic notification](../master/docs/topic-deploy.jpg)
+
+To disable this feature without re-deploying the whole service simply remove emojis from channel topic.
+
 License
 -------
 
