@@ -18,10 +18,19 @@ const (
 	DefaultPort = 8081
 )
 
-var args struct {
-	host string
-	port int
-}
+var (
+	binPath        = os.Args[0]
+	version        = "n/a"
+	buildDate      = "n/a"
+	buildRev       = "n/a"
+	buildGoVersion = "n/a"
+	builder        = "n/a"
+
+	args struct {
+		host string
+		port int
+	}
+)
 
 func init() {
 	flag.StringVar(&args.host, "h", DefaultHost, "Host or address to listen on")
