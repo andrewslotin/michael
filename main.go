@@ -48,7 +48,12 @@ func main() {
 		log.Printf("GITHUB_TOKEN env variable not set, only public PRs details will be displayed in deploy announcements")
 	}
 
-	srv := server.New(args.host, args.port, slackToken, githubToken, stores.NewMemory())
+	store, err := getDeployStore()
+	if err != nil {
+		log.Fatalf("failed to open deploy DB: %s", err)
+	}
+
+	srv := server.New(args.host, args.port, slackToken, githubToken, store)
 
 	if slackWebAPIToken := os.Getenv("SLACK_WEBAPI_TOKEN"); slackWebAPIToken != "" {
 		api := slack.NewWebAPI(slackWebAPIToken, nil)
@@ -71,4 +76,16 @@ func main() {
 		log.Println("signal received, shutting down...")
 		srv.Shutdown()
 	}
+}
+
+func getDeployStore() (stores.Store, error) {
+	boltDBPath := os.Getenv("BOLTDB_PATH")
+	if boltDBPath != "" {
+		log.Printf("writing deploy history into a BoltDB in %s", boltDBPath)
+		return stores.NewBoltDB(boltDBPath)
+	}
+
+	log.Println("BOLTDB_PATH env variable not set, keeping deploy history in memory")
+
+	return stores.NewMemory(), nil
 }
