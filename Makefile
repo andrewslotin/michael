@@ -26,4 +26,4 @@ container: all compress
 clean:
 	go clean
 
-.PHONY: 
+.PHONY: test build slack-deploy-command compress all container clean
