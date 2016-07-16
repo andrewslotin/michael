@@ -8,7 +8,7 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/andrewslotin/slack-deploy-command/deploy"
+	"github.com/andrewslotin/slack-deploy-command/deploy/stores"
 	"github.com/andrewslotin/slack-deploy-command/server"
 	"github.com/andrewslotin/slack-deploy-command/slack"
 )
@@ -48,7 +48,7 @@ func main() {
 		log.Printf("GITHUB_TOKEN env variable not set, only public PRs details will be displayed in deploy announcements")
 	}
 
-	srv := server.New(args.host, args.port, slackToken, githubToken, deploy.NewStore())
+	srv := server.New(args.host, args.port, slackToken, githubToken, stores.NewMemory())
 
 	if slackWebAPIToken := os.Getenv("SLACK_WEBAPI_TOKEN"); slackWebAPIToken != "" {
 		api := slack.NewWebAPI(slackWebAPIToken, nil)
