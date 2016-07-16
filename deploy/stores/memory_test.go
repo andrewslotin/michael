@@ -1,17 +1,17 @@
-package deploy_test
+package stores_test
 
 import (
 	"testing"
 	"time"
 
-	"github.com/andrewslotin/slack-deploy-command/deploy"
+	"github.com/andrewslotin/slack-deploy-command/deploy/stores"
 	"github.com/andrewslotin/slack-deploy-command/slack"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
-func TestStore_GetSet(t *testing.T) {
-	store := deploy.NewStore()
+func TestMemory_GetSet(t *testing.T) {
+	store := stores.NewMemory()
 
 	d, ok := store.Get("key1")
 	assert.False(t, ok)
@@ -51,8 +51,8 @@ func TestStore_GetSet(t *testing.T) {
 	assert.WithinDuration(t, time.Now(), d.StartedAt, time.Second)
 }
 
-func TestStore_Del(t *testing.T) {
-	store := deploy.NewStore()
+func TestMemory_Del(t *testing.T) {
+	store := stores.NewMemory()
 
 	_, ok := store.Del("key1")
 	assert.False(t, ok)

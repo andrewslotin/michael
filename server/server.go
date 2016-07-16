@@ -24,13 +24,13 @@ type Server struct {
 
 	listener   net.Listener
 	slackToken string
-	deploys    *deploy.Store
+	deploys    *deploy.MemoryStore
 	responses  *ResponseBuilder
 
 	deployEventHandlers []DeployEventHandler
 }
 
-func New(host string, port int, slackToken, githubToken string, deploys *deploy.Store) *Server {
+func New(host string, port int, slackToken, githubToken string, deploys *deploy.MemoryStore) *Server {
 	return &Server{
 		Addr:       fmt.Sprintf("%s:%d", host, port),
 		slackToken: slackToken,
