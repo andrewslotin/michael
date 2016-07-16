@@ -68,6 +68,15 @@ the deploy bot will swap these emojis.
 
 To disable this feature without re-deploying the whole service simply remove emojis from channel topic.
 
+### Persistent deploy statuses
+
+To keep the deploy status between service restarts you might want to use built-in BoltDB database. To do this you need to specify the path to
+your BoltDB file in `BOLTDB_PATH` environment variable.
+
+```go
+BOLTDB_PATH=/path/to/your/bolt.db $GOPATH/bin/slack-deploy-command
+```
+
 License
 -------
 

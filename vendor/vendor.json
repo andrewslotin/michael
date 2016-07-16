@@ -1,0 +1,13 @@
+{
+	"comment": "",
+	"ignore": "test",
+	"package": [
+		{
+			"checksumSHA1": "QztRTESYrMbbGofkfaR5980DYLc=",
+			"path": "github.com/boltdb/bolt",
+			"revision": "acc803f0ced151102ed51bf824f8709ebd6602bc",
+			"revisionTime": "2016-07-07T16:56:50Z"
+		}
+	],
+	"rootPath": "github.com/andrewslotin/slack-deploy-command"
+}

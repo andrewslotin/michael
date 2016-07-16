@@ -1,24 +1,30 @@
-package deploy_test
+package stores_test
 
 import (
+	"io/ioutil"
+	"os"
 	"testing"
 	"time"
 
-	"github.com/andrewslotin/slack-deploy-command/deploy"
+	"github.com/andrewslotin/slack-deploy-command/deploy/stores"
 	"github.com/andrewslotin/slack-deploy-command/slack"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
-func TestStore_GetSet(t *testing.T) {
-	store := deploy.NewStore()
+func TestBoltDB_GetSet(t *testing.T) {
+	path, teardown := setup(t)
+	defer teardown()
 
-	d, ok := store.Get("key1")
+	store, err := stores.NewBoltDB(path)
+	require.NoError(t, err)
+
+	_, ok := store.Get("key1")
 	assert.False(t, ok)
 
 	// Store a value
 	store.Set("key1", slack.User{ID: "1", Name: "Test User"}, "Deploy subject")
-	d, ok = store.Get("key1")
+	d, ok := store.Get("key1")
 	assert.True(t, ok)
 	assert.Equal(t, "1", d.User.ID)
 	assert.Equal(t, "Test User", d.User.Name)
@@ -51,8 +57,12 @@ func TestStore_GetSet(t *testing.T) {
 	assert.WithinDuration(t, time.Now(), d.StartedAt, time.Second)
 }
 
-func TestStore_Del(t *testing.T) {
-	store := deploy.NewStore()
+func TestBoltDB_Del(t *testing.T) {
+	path, teardown := setup(t)
+	defer teardown()
+
+	store, err := stores.NewBoltDB(path)
+	require.NoError(t, err)
 
 	_, ok := store.Del("key1")
 	assert.False(t, ok)
@@ -76,4 +86,12 @@ func TestStore_Del(t *testing.T) {
 	assert.False(t, ok)
 	_, ok = store.Get("key2")
 	assert.True(t, ok)
+}
+
+func setup(t *testing.T) (path string, teardownFn func()) {
+	fd, err := ioutil.TempFile(os.TempDir(), "doppelganger")
+	require.NoError(t, err)
+	fd.Close()
+
+	return fd.Name(), func() { os.Remove(fd.Name()) }
 }

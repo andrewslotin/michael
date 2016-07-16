@@ -9,7 +9,7 @@ import (
 	"net"
 	"net/http"
 
-	"github.com/andrewslotin/slack-deploy-command/deploy"
+	"github.com/andrewslotin/slack-deploy-command/deploy/stores"
 	"github.com/andrewslotin/slack-deploy-command/github"
 	"github.com/andrewslotin/slack-deploy-command/slack"
 )
@@ -24,13 +24,13 @@ type Server struct {
 
 	listener   net.Listener
 	slackToken string
-	deploys    *deploy.Store
+	deploys    stores.Store
 	responses  *ResponseBuilder
 
 	deployEventHandlers []DeployEventHandler
 }
 
-func New(host string, port int, slackToken, githubToken string, deploys *deploy.Store) *Server {
+func New(host string, port int, slackToken, githubToken string, deploys stores.Store) *Server {
 	return &Server{
 		Addr:       fmt.Sprintf("%s:%d", host, port),
 		slackToken: slackToken,
