@@ -15,8 +15,17 @@ func (repo *ChannelDeploys) Current(channelID string) (Deploy, bool) {
 }
 
 func (repo *ChannelDeploys) Start(channelID string, d Deploy) (Deploy, bool) {
-	if current, ok := repo.Current(channelID); ok {
-		return current, false
+	for {
+		current, ok := repo.Current(channelID)
+		if !ok {
+			break
+		}
+
+		if current.User.ID != d.User.ID {
+			return current, false
+		}
+
+		repo.Finish(channelID)
 	}
 
 	d.StartedAt = time.Now()

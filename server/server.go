@@ -115,19 +115,10 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			go h.DeployCompleted(channelID)
 		}
 	default:
-		d := deploy.New(user, subject)
-		for {
-			currentDeploy, ok := s.deploys.Start(channelID, d)
-			if ok {
-				break
-			}
-
-			if currentDeploy.User.ID != user.ID {
-				sendImmediateResponse(w, s.responses.DeployInProgressMessage(currentDeploy))
-				return
-			}
-
-			s.deploys.Finish(channelID)
+		d, ok := s.deploys.Start(channelID, deploy.New(user, subject))
+		if !ok {
+			sendImmediateResponse(w, s.responses.DeployInProgressMessage(d))
+			return
 		}
 
 		w.Write(nil)

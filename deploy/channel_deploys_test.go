@@ -84,6 +84,29 @@ func TestChannelDeploys_Start(t *testing.T) {
 	store.AssertExpectations(t)
 }
 
+func TestChannelDeploys_Start_UpdateCurrent(t *testing.T) {
+	current := deploy.New(slack.User{ID: "1", Name: "Test User"}, "Active deploy")
+	current.StartedAt = time.Now().Add(-2 * time.Minute)
+
+	store := new(StoreMock)
+	store.
+		On("Get", "key1").Return(current, true).Once(). // return running deploy
+		On("Del", "key1").Return(current, true).
+		On("Get", "key1").Return(deploy.Deploy{}, false). // current deploy has already been finished
+		On("Set", "key1", mock.AnythingOfType("deploy.Deploy")).Return()
+
+	repo := deploy.NewChannelDeploys(store)
+
+	d := deploy.New(slack.User{ID: "1", Name: "Test User"}, "Test subject")
+	if started, ok := repo.Start("key1", d); assert.True(t, ok) {
+		assert.Equal(t, d.User, started.User)
+		assert.Equal(t, d.Subject, started.Subject)
+		assert.WithinDuration(t, time.Now(), started.StartedAt, time.Second)
+	}
+
+	store.AssertExpectations(t)
+}
+
 func TestChannelDeploys_Finish(t *testing.T) {
 	current := deploy.New(slack.User{ID: "1", Name: "Test User"}, "Test subject")
 	current.StartedAt = time.Now().Add(-2 * time.Second)
