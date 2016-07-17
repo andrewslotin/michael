@@ -8,7 +8,7 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/andrewslotin/slack-deploy-command/deploy/stores"
+	"github.com/andrewslotin/slack-deploy-command/deploy"
 	"github.com/andrewslotin/slack-deploy-command/server"
 	"github.com/andrewslotin/slack-deploy-command/slack"
 )
@@ -100,14 +100,14 @@ func main() {
 	}
 }
 
-func getDeployStore() (stores.Store, error) {
+func getDeployStore() (deploy.Store, error) {
 	boltDBPath := os.Getenv("BOLTDB_PATH")
 	if boltDBPath != "" {
 		log.Printf("writing deploy history into a BoltDB in %s", boltDBPath)
-		return stores.NewBoltDB(boltDBPath)
+		return deploy.NewBoltDBStore(boltDBPath)
 	}
 
 	log.Println("BOLTDB_PATH env variable not set, keeping deploy history in memory")
 
-	return stores.NewMemory(), nil
+	return deploy.NewInMemoryStore(), nil
 }

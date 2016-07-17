@@ -1,10 +1,9 @@
-package stores
+package deploy
 
 import (
 	"fmt"
 	"time"
 
-	"github.com/andrewslotin/slack-deploy-command/deploy"
 	"github.com/andrewslotin/slack-deploy-command/slack"
 	"github.com/boltdb/bolt"
 )
@@ -16,20 +15,20 @@ const (
 	startedAtKey = "started_at"
 )
 
-type BoltDB struct {
+type BoltDBStore struct {
 	db *bolt.DB
 }
 
-func NewBoltDB(path string) (*BoltDB, error) {
+func NewBoltDBStore(path string) (*BoltDBStore, error) {
 	db, err := bolt.Open(path, 0600, &bolt.Options{Timeout: 2 * time.Second})
 	if err != nil {
 		return nil, fmt.Errorf("failed to open db %s: %s", path, err)
 	}
 
-	return &BoltDB{db: db}, nil
+	return &BoltDBStore{db: db}, nil
 }
 
-func (s *BoltDB) Get(key string) (deploy deploy.Deploy, ok bool) {
+func (s *BoltDBStore) Get(key string) (deploy Deploy, ok bool) {
 	s.db.View(func(tx *bolt.Tx) error {
 		b := tx.Bucket([]byte(key))
 		if b == nil {
@@ -49,7 +48,7 @@ func (s *BoltDB) Get(key string) (deploy deploy.Deploy, ok bool) {
 	return deploy, ok
 }
 
-func (s *BoltDB) Set(key string, d deploy.Deploy) {
+func (s *BoltDBStore) Set(key string, d Deploy) {
 	s.db.Update(func(tx *bolt.Tx) error {
 		b, err := tx.CreateBucketIfNotExists([]byte(key))
 		if err != nil {
@@ -63,7 +62,7 @@ func (s *BoltDB) Set(key string, d deploy.Deploy) {
 	})
 }
 
-func (s *BoltDB) Del(key string) (d deploy.Deploy, ok bool) {
+func (s *BoltDBStore) Del(key string) (d Deploy, ok bool) {
 	s.db.Update(func(tx *bolt.Tx) error {
 		b := tx.Bucket([]byte(key))
 		if b == nil {
@@ -87,14 +86,14 @@ func (s *BoltDB) Del(key string) (d deploy.Deploy, ok bool) {
 	return d, ok
 }
 
-func (*BoltDB) writeDeploy(deploy deploy.Deploy, b *bolt.Bucket) {
-	b.Put([]byte([]byte(subjectKey)), []byte(deploy.Subject))
-	b.Put([]byte([]byte(userIDKey)), []byte(deploy.User.ID))
-	b.Put([]byte([]byte(userNameKey)), []byte(deploy.User.Name))
-	b.Put([]byte([]byte(startedAtKey)), []byte(deploy.StartedAt.Format(time.RFC1123Z)))
+func (*BoltDBStore) writeDeploy(deploy Deploy, b *bolt.Bucket) {
+	b.Put([]byte(subjectKey), []byte(deploy.Subject))
+	b.Put([]byte(userIDKey), []byte(deploy.User.ID))
+	b.Put([]byte(userNameKey), []byte(deploy.User.Name))
+	b.Put([]byte(startedAtKey), []byte(deploy.StartedAt.Format(time.RFC1123Z)))
 }
 
-func (*BoltDB) readDeploy(b *bolt.Bucket) (deploy deploy.Deploy, err error) {
+func (*BoltDBStore) readDeploy(b *bolt.Bucket) (deploy Deploy, err error) {
 	deploy.User = slack.User{
 		ID:   string(b.Get([]byte(userIDKey))),
 		Name: string(b.Get([]byte(userNameKey))),
