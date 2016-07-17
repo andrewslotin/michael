@@ -9,6 +9,7 @@ import (
 	"net"
 	"net/http"
 
+	"github.com/andrewslotin/slack-deploy-command/deploy"
 	"github.com/andrewslotin/slack-deploy-command/deploy/stores"
 	"github.com/andrewslotin/slack-deploy-command/github"
 	"github.com/andrewslotin/slack-deploy-command/slack"
@@ -123,7 +124,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		s.deploys.Set(channelID, user, subject)
+		s.deploys.Set(channelID, deploy.New(user, subject))
 		w.Write(nil)
 
 		go sendDelayedResponse(w, r, s.responses.DeployAnnouncement(user, subject))

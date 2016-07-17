@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"github.com/andrewslotin/slack-deploy-command/deploy"
-	"github.com/andrewslotin/slack-deploy-command/slack"
 )
 
 type Memory struct {
@@ -27,13 +26,10 @@ func (s *Memory) Get(key string) (deploy deploy.Deploy, ok bool) {
 	return deploy, ok
 }
 
-func (s *Memory) Set(key string, user slack.User, subject string) {
+func (s *Memory) Set(key string, deploy deploy.Deploy) {
+	deploy.StartedAt = time.Now()
 	s.mu.Lock()
-	s.m[key] = deploy.Deploy{
-		User:      user,
-		Subject:   subject,
-		StartedAt: time.Now(),
-	}
+	s.m[key] = deploy
 	s.mu.Unlock()
 }
 

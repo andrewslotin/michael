@@ -49,20 +49,21 @@ func (s *BoltDB) Get(key string) (deploy deploy.Deploy, ok bool) {
 	return deploy, ok
 }
 
-func (s *BoltDB) Set(key string, user slack.User, subject string) {
+func (s *BoltDB) Set(key string, d deploy.Deploy) {
 	s.db.Update(func(tx *bolt.Tx) error {
 		b, err := tx.CreateBucketIfNotExists([]byte(key))
 		if err != nil {
-			return fmt.Errorf("failed to store deploy of %s by %s in channel %s: %s", subject, user.Name, key, err)
+			return fmt.Errorf("failed to store deploy of %s by %s in channel %s: %s", d.Subject, d.User.Name, key, err)
 		}
 
-		s.writeDeploy(deploy.Deploy{User: user, Subject: subject, StartedAt: time.Now()}, b)
+		d.StartedAt = time.Now()
+		s.writeDeploy(d, b)
 
 		return nil
 	})
 }
 
-func (s *BoltDB) Del(key string) (deploy deploy.Deploy, ok bool) {
+func (s *BoltDB) Del(key string) (d deploy.Deploy, ok bool) {
 	s.db.Update(func(tx *bolt.Tx) error {
 		b := tx.Bucket([]byte(key))
 		if b == nil {
@@ -70,7 +71,7 @@ func (s *BoltDB) Del(key string) (deploy deploy.Deploy, ok bool) {
 		}
 
 		var err error
-		if deploy, err = s.readDeploy(b); err != nil {
+		if d, err = s.readDeploy(b); err != nil {
 			return err
 		}
 
@@ -83,7 +84,7 @@ func (s *BoltDB) Del(key string) (deploy deploy.Deploy, ok bool) {
 		return nil
 	})
 
-	return deploy, ok
+	return d, ok
 }
 
 func (*BoltDB) writeDeploy(deploy deploy.Deploy, b *bolt.Bucket) {

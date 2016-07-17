@@ -6,6 +6,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/andrewslotin/slack-deploy-command/deploy"
 	"github.com/andrewslotin/slack-deploy-command/deploy/stores"
 	"github.com/andrewslotin/slack-deploy-command/slack"
 	"github.com/stretchr/testify/assert"
@@ -23,7 +24,7 @@ func TestBoltDB_GetSet(t *testing.T) {
 	assert.False(t, ok)
 
 	// Store a value
-	store.Set("key1", slack.User{ID: "1", Name: "Test User"}, "Deploy subject")
+	store.Set("key1", deploy.New(slack.User{ID: "1", Name: "Test User"}, "Deploy subject"))
 	d, ok := store.Get("key1")
 	assert.True(t, ok)
 	assert.Equal(t, "1", d.User.ID)
@@ -32,7 +33,7 @@ func TestBoltDB_GetSet(t *testing.T) {
 	assert.WithinDuration(t, time.Now(), d.StartedAt, time.Second)
 
 	// Override existing value
-	store.Set("key1", slack.User{ID: "2", Name: "First User"}, "Updated deploy subject")
+	store.Set("key1", deploy.New(slack.User{ID: "2", Name: "First User"}, "Updated deploy subject"))
 	d, ok = store.Get("key1")
 	assert.True(t, ok)
 	assert.Equal(t, "2", d.User.ID)
@@ -41,7 +42,7 @@ func TestBoltDB_GetSet(t *testing.T) {
 	assert.WithinDuration(t, time.Now(), d.StartedAt, time.Second)
 
 	// Populate another key
-	store.Set("key2", slack.User{ID: "3", Name: "Second User"}, "Another deploy")
+	store.Set("key2", deploy.New(slack.User{ID: "3", Name: "Second User"}, "Another deploy"))
 	d, ok = store.Get("key2")
 	assert.True(t, ok)
 	assert.Equal(t, "3", d.User.ID)
@@ -67,8 +68,8 @@ func TestBoltDB_Del(t *testing.T) {
 	_, ok := store.Del("key1")
 	assert.False(t, ok)
 
-	store.Set("key1", slack.User{ID: "1", Name: "First User"}, "Deploy subject")
-	store.Set("key2", slack.User{ID: "2", Name: "Second User"}, "Another deploy")
+	store.Set("key1", deploy.New(slack.User{ID: "1", Name: "First User"}, "Deploy subject"))
+	store.Set("key2", deploy.New(slack.User{ID: "2", Name: "Second User"}, "Another deploy"))
 
 	_, ok = store.Get("key1")
 	require.True(t, ok)
