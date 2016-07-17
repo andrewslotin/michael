@@ -24,17 +24,17 @@ type Server struct {
 
 	listener   net.Listener
 	slackToken string
-	deploys    deploy.Store
+	deploys    *deploy.ChannelDeploys
 	responses  *ResponseBuilder
 
 	deployEventHandlers []DeployEventHandler
 }
 
-func New(host string, port int, slackToken, githubToken string, deploys deploy.Store) *Server {
+func New(host string, port int, slackToken, githubToken string, store deploy.Store) *Server {
 	return &Server{
 		Addr:       fmt.Sprintf("%s:%d", host, port),
 		slackToken: slackToken,
-		deploys:    deploys,
+		deploys:    deploy.NewChannelDeploys(store),
 		responses:  NewResponseBuilder(github.NewClient(githubToken, nil)),
 	}
 }
@@ -46,10 +46,7 @@ func (s *Server) Start() error {
 	}
 	s.listener = listener
 
-	srv := http.Server{
-		Handler: s,
-	}
-
+	srv := http.Server{Handler: s}
 	go func() {
 		err := srv.Serve(s.listener)
 		if err != nil {
@@ -94,7 +91,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	case "", "help":
 		sendImmediateResponse(w, s.responses.HelpMessage())
 	case "status":
-		d, ok := s.deploys.Get(channelID)
+		d, ok := s.deploys.Current(channelID)
 		if !ok {
 			sendImmediateResponse(w, s.responses.NoRunningDeploysMessage())
 			return
@@ -102,7 +99,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 		sendImmediateResponse(w, s.responses.DeployStatusMessage(d))
 	case "done":
-		d, ok := s.deploys.Del(channelID)
+		d, ok := s.deploys.Finish(channelID)
 		if !ok {
 			sendImmediateResponse(w, s.responses.NoRunningDeploysMessage())
 			return
@@ -118,12 +115,21 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			go h.DeployCompleted(channelID)
 		}
 	default:
-		if d, ok := s.deploys.Get(channelID); ok && d.User.ID != user.ID {
-			sendImmediateResponse(w, s.responses.DeployInProgressMessage(d))
-			return
+		d := deploy.New(user, subject)
+		for {
+			currentDeploy, ok := s.deploys.Start(channelID, d)
+			if ok {
+				break
+			}
+
+			if currentDeploy.User.ID != user.ID {
+				sendImmediateResponse(w, s.responses.DeployInProgressMessage(currentDeploy))
+				return
+			}
+
+			s.deploys.Finish(channelID)
 		}
 
-		s.deploys.Set(channelID, deploy.New(user, subject))
 		w.Write(nil)
 
 		go sendDelayedResponse(w, r, s.responses.DeployAnnouncement(user, subject))
