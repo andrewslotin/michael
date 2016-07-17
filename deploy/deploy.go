@@ -11,3 +11,7 @@ type Deploy struct {
 	Subject   string
 	StartedAt time.Time
 }
+
+func New(user slack.User, subject string) Deploy {
+	return Deploy{User: user, Subject: subject}
+}
