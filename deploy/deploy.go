@@ -16,3 +16,12 @@ type Deploy struct {
 func New(user slack.User, subject string) Deploy {
 	return Deploy{User: user, Subject: subject}
 }
+
+func (d *Deploy) Start() bool {
+	if !d.StartedAt.IsZero() {
+		return false
+	}
+
+	d.StartedAt = time.Now().UTC()
+	return true
+}
