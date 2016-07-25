@@ -1,7 +1,5 @@
 package deploy
 
-import "time"
-
 type ChannelDeploys struct {
 	store Store
 }
@@ -28,7 +26,7 @@ func (repo *ChannelDeploys) Start(channelID string, d Deploy) (Deploy, bool) {
 		repo.Finish(channelID)
 	}
 
-	d.StartedAt = time.Now()
+	d.Start()
 	repo.store.Set(channelID, d)
 
 	return d, true

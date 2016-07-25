@@ -1,9 +1,6 @@
 package deploy
 
-import (
-	"sync"
-	"time"
-)
+import "sync"
 
 type InMemoryStore struct {
 	mu sync.RWMutex
@@ -25,7 +22,6 @@ func (s *InMemoryStore) Get(key string) (d Deploy, ok bool) {
 }
 
 func (s *InMemoryStore) Set(key string, d Deploy) {
-	d.StartedAt = time.Now()
 	s.mu.Lock()
 	s.m[key] = d
 	s.mu.Unlock()

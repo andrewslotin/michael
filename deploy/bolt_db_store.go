@@ -56,7 +56,6 @@ func (s *BoltDBStore) Set(key string, d Deploy) {
 			return fmt.Errorf("failed to store deploy of %s by %s in channel %s: %s", d.Subject, d.User.Name, key, err)
 		}
 
-		d.StartedAt = time.Now()
 		s.writeDeploy(d, b)
 
 		return nil
@@ -91,10 +90,10 @@ func (*BoltDBStore) writeDeploy(deploy Deploy, b *bolt.Bucket) {
 	b.Put([]byte(subjectKey), []byte(deploy.Subject))
 	b.Put([]byte(userIDKey), []byte(deploy.User.ID))
 	b.Put([]byte(userNameKey), []byte(deploy.User.Name))
-	b.Put([]byte(startedAtKey), []byte(deploy.StartedAt.Format(time.RFC1123Z)))
+	b.Put([]byte(startedAtKey), []byte(deploy.StartedAt.Format(time.RFC3339Nano)))
 
 	if !deploy.FinishedAt.IsZero() {
-		b.Put([]byte(finishedAtKey), []byte(deploy.FinishedAt.Format(time.RFC1123Z)))
+		b.Put([]byte(finishedAtKey), []byte(deploy.FinishedAt.Format(time.RFC3339Nano)))
 	}
 }
 
@@ -105,14 +104,14 @@ func (*BoltDBStore) readDeploy(b *bolt.Bucket) (deploy Deploy, err error) {
 	}
 	deploy.Subject = string(b.Get([]byte(subjectKey)))
 
-	if startedAt, err := time.Parse(time.RFC1123Z, string(b.Get([]byte(startedAtKey)))); err != nil {
+	if startedAt, err := time.Parse(time.RFC3339Nano, string(b.Get([]byte(startedAtKey)))); err != nil {
 		return deploy, fmt.Errorf("malformed started_at time for deploy of %s by %s: %s", deploy.Subject, deploy.User.Name, err)
 	} else {
 		deploy.StartedAt = startedAt
 	}
 
 	if value := b.Get([]byte(finishedAtKey)); value != nil {
-		if finishedAt, err := time.Parse(time.RFC1123Z, string(value)); err != nil {
+		if finishedAt, err := time.Parse(time.RFC3339Nano, string(value)); err != nil {
 			return deploy, fmt.Errorf("malformed finished_at time for deploy of %s by %s: %s", deploy.Subject, deploy.User.Name, err)
 		} else {
 			deploy.FinishedAt = finishedAt
