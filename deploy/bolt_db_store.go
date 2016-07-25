@@ -9,10 +9,11 @@ import (
 )
 
 const (
-	userIDKey    = "user.id"
-	userNameKey  = "user.name"
-	subjectKey   = "subject"
-	startedAtKey = "started_at"
+	userIDKey     = "user.id"
+	userNameKey   = "user.name"
+	subjectKey    = "subject"
+	startedAtKey  = "started_at"
+	finishedAtKey = "finished_at"
 )
 
 type BoltDBStore struct {
@@ -91,6 +92,10 @@ func (*BoltDBStore) writeDeploy(deploy Deploy, b *bolt.Bucket) {
 	b.Put([]byte(userIDKey), []byte(deploy.User.ID))
 	b.Put([]byte(userNameKey), []byte(deploy.User.Name))
 	b.Put([]byte(startedAtKey), []byte(deploy.StartedAt.Format(time.RFC1123Z)))
+
+	if !deploy.FinishedAt.IsZero() {
+		b.Put([]byte(finishedAtKey), []byte(deploy.FinishedAt.Format(time.RFC1123Z)))
+	}
 }
 
 func (*BoltDBStore) readDeploy(b *bolt.Bucket) (deploy Deploy, err error) {
@@ -104,6 +109,14 @@ func (*BoltDBStore) readDeploy(b *bolt.Bucket) (deploy Deploy, err error) {
 		return deploy, fmt.Errorf("malformed started_at time for deploy of %s by %s: %s", deploy.Subject, deploy.User.Name, err)
 	} else {
 		deploy.StartedAt = startedAt
+	}
+
+	if value := b.Get([]byte(finishedAtKey)); value != nil {
+		if finishedAt, err := time.Parse(time.RFC1123Z, string(value)); err != nil {
+			return deploy, fmt.Errorf("malformed finished_at time for deploy of %s by %s: %s", deploy.Subject, deploy.User.Name, err)
+		} else {
+			deploy.FinishedAt = finishedAt
+		}
 	}
 
 	return deploy, nil

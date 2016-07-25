@@ -7,9 +7,10 @@ import (
 )
 
 type Deploy struct {
-	User      slack.User
-	Subject   string
-	StartedAt time.Time
+	User       slack.User
+	Subject    string
+	StartedAt  time.Time
+	FinishedAt time.Time
 }
 
 func New(user slack.User, subject string) Deploy {

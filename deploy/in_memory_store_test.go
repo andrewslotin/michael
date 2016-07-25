@@ -13,42 +13,47 @@ import (
 func TestInMemoryStore_GetSet(t *testing.T) {
 	store := deploy.NewInMemoryStore()
 
-	d, ok := store.Get("key1")
+	_, ok := store.Get("key1")
 	assert.False(t, ok)
 
 	// Store a value
 	store.Set("key1", deploy.New(slack.User{ID: "1", Name: "Test User"}, "Deploy subject"))
-	d, ok = store.Get("key1")
-	assert.True(t, ok)
-	assert.Equal(t, "1", d.User.ID)
-	assert.Equal(t, "Test User", d.User.Name)
-	assert.Equal(t, "Deploy subject", d.Subject)
-	assert.WithinDuration(t, time.Now(), d.StartedAt, time.Second)
+	if d, ok := store.Get("key1"); assert.True(t, ok) {
+		assert.Equal(t, "1", d.User.ID)
+		assert.Equal(t, "Test User", d.User.Name)
+		assert.Equal(t, "Deploy subject", d.Subject)
+		assert.WithinDuration(t, time.Now(), d.StartedAt, time.Second)
+		assert.True(t, d.FinishedAt.IsZero())
+	}
 
 	// Override existing value
 	store.Set("key1", deploy.New(slack.User{ID: "2", Name: "First User"}, "Updated deploy subject"))
-	d, ok = store.Get("key1")
-	assert.True(t, ok)
-	assert.Equal(t, "2", d.User.ID)
-	assert.Equal(t, "First User", d.User.Name)
-	assert.Equal(t, "Updated deploy subject", d.Subject)
-	assert.WithinDuration(t, time.Now(), d.StartedAt, time.Second)
+	if d, ok := store.Get("key1"); assert.True(t, ok) {
+		assert.Equal(t, "2", d.User.ID)
+		assert.Equal(t, "First User", d.User.Name)
+		assert.Equal(t, "Updated deploy subject", d.Subject)
+		assert.WithinDuration(t, time.Now(), d.StartedAt, time.Second)
+		assert.True(t, d.FinishedAt.IsZero())
+	}
 
 	// Populate another key
 	store.Set("key2", deploy.New(slack.User{ID: "3", Name: "Second User"}, "Another deploy"))
-	d, ok = store.Get("key2")
-	assert.True(t, ok)
-	assert.Equal(t, "3", d.User.ID)
-	assert.Equal(t, "Second User", d.User.Name)
-	assert.Equal(t, "Another deploy", d.Subject)
-	assert.WithinDuration(t, time.Now(), d.StartedAt, time.Second)
+	if d, ok := store.Get("key2"); assert.True(t, ok) {
+		assert.Equal(t, "3", d.User.ID)
+		assert.Equal(t, "Second User", d.User.Name)
+		assert.Equal(t, "Another deploy", d.Subject)
+		assert.WithinDuration(t, time.Now(), d.StartedAt, time.Second)
+		assert.True(t, d.FinishedAt.IsZero())
+	}
 
-	d, ok = store.Get("key1")
-	assert.True(t, ok)
-	assert.Equal(t, "2", d.User.ID)
-	assert.Equal(t, "First User", d.User.Name)
-	assert.Equal(t, "Updated deploy subject", d.Subject)
-	assert.WithinDuration(t, time.Now(), d.StartedAt, time.Second)
+	// Check that another record wasn't changed
+	if d, ok := store.Get("key1"); assert.True(t, ok) {
+		assert.Equal(t, "2", d.User.ID)
+		assert.Equal(t, "First User", d.User.Name)
+		assert.Equal(t, "Updated deploy subject", d.Subject)
+		assert.WithinDuration(t, time.Now(), d.StartedAt, time.Second)
+		assert.True(t, d.FinishedAt.IsZero())
+	}
 }
 
 func TestInMemoryStore_Del(t *testing.T) {
@@ -65,12 +70,12 @@ func TestInMemoryStore_Del(t *testing.T) {
 	_, ok = store.Get("key2")
 	require.True(t, ok)
 
-	d, ok := store.Del("key1")
-	assert.True(t, ok)
-	assert.Equal(t, "1", d.User.ID)
-	assert.Equal(t, "First User", d.User.Name)
-	assert.Equal(t, "Deploy subject", d.Subject)
-	assert.WithinDuration(t, time.Now(), d.StartedAt, time.Second)
+	if d, ok := store.Del("key1"); assert.True(t, ok) {
+		assert.Equal(t, "1", d.User.ID)
+		assert.Equal(t, "First User", d.User.Name)
+		assert.Equal(t, "Deploy subject", d.Subject)
+		assert.WithinDuration(t, time.Now(), d.StartedAt, time.Second)
+	}
 
 	_, ok = store.Get("key1")
 	assert.False(t, ok)
