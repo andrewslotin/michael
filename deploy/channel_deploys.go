@@ -9,7 +9,8 @@ func NewChannelDeploys(store Store) *ChannelDeploys {
 }
 
 func (repo *ChannelDeploys) Current(channelID string) (Deploy, bool) {
-	return repo.store.Get(channelID)
+	d, ok := repo.store.Get(channelID)
+	return d, ok && d.FinishedAt.IsZero()
 }
 
 func (repo *ChannelDeploys) Start(channelID string, d Deploy) (Deploy, bool) {
