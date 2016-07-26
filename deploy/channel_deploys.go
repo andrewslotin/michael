@@ -33,5 +33,13 @@ func (repo *ChannelDeploys) Start(channelID string, d Deploy) (Deploy, bool) {
 }
 
 func (repo *ChannelDeploys) Finish(channelID string) (Deploy, bool) {
-	return repo.store.Del(channelID)
+	current, ok := repo.Current(channelID)
+	if !ok {
+		return current, false
+	}
+
+	current.Finish()
+	repo.store.Set(channelID, current)
+
+	return current, true
 }
