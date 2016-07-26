@@ -67,36 +67,3 @@ func (suite *StoreSuite) TestSet_Update() {
 		assert.Equal(suite.T(), updated, d)
 	}
 }
-
-func (suite *StoreSuite) TestDel() {
-	store, teardown, err := suite.Setup()
-	if teardown != nil {
-		defer teardown()
-	}
-	require.NoError(suite.T(), err)
-
-	_, ok := store.Del("key1")
-	assert.False(suite.T(), ok)
-
-	channel1Deploy := deploy.New(slack.User{ID: "1", Name: "First User"}, "Deploy subject")
-	channel1Deploy.Start()
-	store.Set("key1", channel1Deploy)
-
-	channel2Deploy := deploy.New(slack.User{ID: "2", Name: "Second User"}, "Another deploy")
-	channel2Deploy.Start()
-	store.Set("key2", channel2Deploy)
-
-	_, ok = store.Get("key1")
-	require.True(suite.T(), ok)
-	_, ok = store.Get("key2")
-	require.True(suite.T(), ok)
-
-	if d, ok := store.Del("key1"); assert.True(suite.T(), ok) {
-		assert.Equal(suite.T(), channel1Deploy, d)
-	}
-
-	_, ok = store.Get("key1")
-	assert.False(suite.T(), ok)
-	_, ok = store.Get("key2")
-	assert.True(suite.T(), ok)
-}
