@@ -91,7 +91,7 @@ func TestChannelDeploys_Start_UpdateCurrent(t *testing.T) {
 	store := new(StoreMock)
 	store.
 		On("Get", "key1").Return(current, true).Once(). // return running deploy
-		On("Del", "key1").Return(current, true).
+		On("Set", "key1", mock.AnythingOfType("deploy.Deploy")).Return(current, true).Once().
 		On("Get", "key1").Return(deploy.Deploy{}, false). // current deploy has already been finished
 		On("Set", "key1", mock.AnythingOfType("deploy.Deploy")).Return()
 
@@ -113,13 +113,16 @@ func TestChannelDeploys_Finish(t *testing.T) {
 
 	store := new(StoreMock)
 	store.
-		On("Del", "key1").Return(current, true).
-		On("Del", "key2").Return(deploy.Deploy{}, false)
+		On("Get", "key1").Return(current, true).
+		On("Get", "key2").Return(deploy.Deploy{}, false).
+		On("Set", "key1", mock.AnythingOfType("deploy.Deploy")).Return()
 
 	repo := deploy.NewChannelDeploys(store)
 
 	if d, ok := repo.Finish("key1"); assert.True(t, ok) {
-		assert.Equal(t, current, d)
+		assert.Equal(t, current.User, d.User)
+		assert.Equal(t, current.Subject, d.Subject)
+		assert.WithinDuration(t, time.Now(), d.FinishedAt, time.Second)
 	}
 
 	_, ok := repo.Finish("key2")
