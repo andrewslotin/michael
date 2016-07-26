@@ -18,3 +18,13 @@ func TestDeploy_Start(t *testing.T) {
 	assert.False(t, d.Start())
 	assert.Equal(t, startTime, d.StartedAt)
 }
+
+func TestDeploy_Finish(t *testing.T) {
+	d := deploy.New(slack.User{ID: "1", Name: "Test User"}, "Test deploy")
+	d.Finish()
+	assert.WithinDuration(t, time.Now(), d.FinishedAt, time.Second)
+
+	finishedAt := d.FinishedAt
+	d.Finish()
+	assert.Equal(t, finishedAt, d.FinishedAt)
+}

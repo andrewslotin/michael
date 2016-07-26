@@ -25,3 +25,11 @@ func (d *Deploy) Start() bool {
 	d.StartedAt = time.Now().UTC()
 	return true
 }
+
+func (d *Deploy) Finish() {
+	if !d.FinishedAt.IsZero() {
+		return
+	}
+
+	d.FinishedAt = time.Now().UTC()
+}
