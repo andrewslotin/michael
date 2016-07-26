@@ -1,6 +1,7 @@
 package deploy
 
 import (
+	"errors"
 	"fmt"
 	"time"
 
@@ -14,6 +15,10 @@ const (
 	subjectKey    = "subject"
 	startedAtKey  = "started_at"
 	finishedAtKey = "finished_at"
+)
+
+var (
+	ErrNoDeploy = errors.New("no deploys in channel")
 )
 
 type BoltDBStore struct {
@@ -36,8 +41,19 @@ func (s *BoltDBStore) Get(key string) (deploy Deploy, ok bool) {
 			return nil
 		}
 
+		lastDeployKey, _ := b.Cursor().Last()
+		if lastDeployKey == nil {
+			ok = false
+			return nil
+		}
+
 		var err error
-		if deploy, err = s.readDeploy(b); err != nil {
+		if deploy, err = s.readDeploy(lastDeployKey, b); err != nil {
+			if err == ErrNoDeploy {
+				ok = false
+				return nil
+			}
+
 			return err
 		}
 
@@ -62,7 +78,16 @@ func (s *BoltDBStore) Set(key string, d Deploy) {
 	})
 }
 
-func (*BoltDBStore) writeDeploy(deploy Deploy, b *bolt.Bucket) {
+func (*BoltDBStore) deployKey(deploy Deploy) []byte {
+	return []byte(deploy.StartedAt.UTC().Format(time.RFC3339Nano) + "-" + deploy.User.ID)
+}
+
+func (s *BoltDBStore) writeDeploy(deploy Deploy, channelBucket *bolt.Bucket) error {
+	b, err := channelBucket.CreateBucketIfNotExists(s.deployKey(deploy))
+	if err != nil {
+		return fmt.Errorf("failed to store deploy from %s by %s: %s", deploy.StartedAt.Format(time.RFC3339), deploy.User.Name, err)
+	}
+
 	b.Put([]byte(subjectKey), []byte(deploy.Subject))
 	b.Put([]byte(userIDKey), []byte(deploy.User.ID))
 	b.Put([]byte(userNameKey), []byte(deploy.User.Name))
@@ -71,9 +96,16 @@ func (*BoltDBStore) writeDeploy(deploy Deploy, b *bolt.Bucket) {
 	if !deploy.FinishedAt.IsZero() {
 		b.Put([]byte(finishedAtKey), []byte(deploy.FinishedAt.Format(time.RFC3339Nano)))
 	}
+
+	return nil
 }
 
-func (*BoltDBStore) readDeploy(b *bolt.Bucket) (deploy Deploy, err error) {
+func (*BoltDBStore) readDeploy(key []byte, channelBucket *bolt.Bucket) (deploy Deploy, err error) {
+	b := channelBucket.Bucket(key)
+	if b == nil {
+		return deploy, ErrNoDeploy
+	}
+
 	deploy.User = slack.User{
 		ID:   string(b.Get([]byte(userIDKey))),
 		Name: string(b.Get([]byte(userNameKey))),
