@@ -62,30 +62,6 @@ func (s *BoltDBStore) Set(key string, d Deploy) {
 	})
 }
 
-func (s *BoltDBStore) Del(key string) (d Deploy, ok bool) {
-	s.db.Update(func(tx *bolt.Tx) error {
-		b := tx.Bucket([]byte(key))
-		if b == nil {
-			return nil
-		}
-
-		var err error
-		if d, err = s.readDeploy(b); err != nil {
-			return err
-		}
-
-		if err = tx.DeleteBucket([]byte(key)); err != nil {
-			return err
-		}
-
-		ok = true
-
-		return nil
-	})
-
-	return d, ok
-}
-
 func (*BoltDBStore) writeDeploy(deploy Deploy, b *bolt.Bucket) {
 	b.Put([]byte(subjectKey), []byte(deploy.Subject))
 	b.Put([]byte(userIDKey), []byte(deploy.User.ID))

@@ -26,12 +26,3 @@ func (s *InMemoryStore) Set(key string, d Deploy) {
 	s.m[key] = d
 	s.mu.Unlock()
 }
-
-func (s *InMemoryStore) Del(key string) (d Deploy, ok bool) {
-	s.mu.Lock()
-	d, ok = s.m[key]
-	delete(s.m, key)
-	s.mu.Unlock()
-
-	return d, ok
-}
