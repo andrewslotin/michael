@@ -10,4 +10,5 @@ type Deploy struct {
 	User      slack.User
 	Subject   string
 	StartedAt time.Time
+	EndAt     time.Time
 }
