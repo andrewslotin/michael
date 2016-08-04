@@ -85,7 +85,7 @@ func main() {
 		log.Printf("SLACK_WEBAPI_TOKEN env variable not set, channel topic notifications are disabled")
 	}
 
-	if err := srv.Start(); err != nil {
+	if err := srv.Start(srv); err != nil {
 		log.Fatal(err)
 	}
 

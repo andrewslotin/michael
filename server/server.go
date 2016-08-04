@@ -40,14 +40,14 @@ func New(host string, port int, slackToken, githubToken string, store deploy.Sto
 	}
 }
 
-func (s *Server) Start() error {
+func (s *Server) Start(h http.Handler) error {
 	listener, err := net.Listen("tcp", s.Addr)
 	if err != nil {
 		return fmt.Errorf("failed to listen on %s (%s)", s.Addr, err)
 	}
 	s.listener = listener
 
-	srv := http.Server{Handler: s}
+	srv := http.Server{Handler: h}
 	go func() {
 		err := srv.Serve(s.listener)
 		if err != nil {
