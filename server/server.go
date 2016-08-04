@@ -9,6 +9,7 @@ import (
 	"net"
 	"net/http"
 
+	"github.com/andrewslotin/slack-deploy-command/bot"
 	"github.com/andrewslotin/slack-deploy-command/deploy"
 	"github.com/andrewslotin/slack-deploy-command/github"
 	"github.com/andrewslotin/slack-deploy-command/slack"
@@ -25,7 +26,7 @@ type Server struct {
 	listener   net.Listener
 	slackToken string
 	deploys    *deploy.ChannelDeploys
-	responses  *ResponseBuilder
+	responses  *bot.ResponseBuilder
 
 	deployEventHandlers []DeployEventHandler
 }
@@ -35,7 +36,7 @@ func New(host string, port int, slackToken, githubToken string, store deploy.Sto
 		Addr:       fmt.Sprintf("%s:%d", host, port),
 		slackToken: slackToken,
 		deploys:    deploy.NewChannelDeploys(store),
-		responses:  NewResponseBuilder(github.NewClient(githubToken, nil)),
+		responses:  bot.NewResponseBuilder(github.NewClient(githubToken, nil)),
 	}
 }
 
