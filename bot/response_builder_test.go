@@ -1,4 +1,4 @@
-package server_test
+package bot_test
 
 import (
 	"errors"
@@ -7,15 +7,15 @@ import (
 	"testing"
 	"time"
 
+	"github.com/andrewslotin/slack-deploy-command/bot"
 	"github.com/andrewslotin/slack-deploy-command/deploy"
 	"github.com/andrewslotin/slack-deploy-command/github"
-	"github.com/andrewslotin/slack-deploy-command/server"
 	"github.com/andrewslotin/slack-deploy-command/slack"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestResponseBuilder_HelpMessage(t *testing.T) {
-	b := server.NewResponseBuilder(github.NewClient("", nil))
+	b := bot.NewResponseBuilder(github.NewClient("", nil))
 	response := b.HelpMessage()
 
 	assert.Equal(t, slack.ResponseTypeEphemeral, response.ResponseType)
@@ -25,7 +25,7 @@ func TestResponseBuilder_HelpMessage(t *testing.T) {
 }
 
 func TestResponseBuilder_ErrorMessage(t *testing.T) {
-	b := server.NewResponseBuilder(github.NewClient("", nil))
+	b := bot.NewResponseBuilder(github.NewClient("", nil))
 	response := b.ErrorMessage("/command do", errors.New("error message"))
 
 	assert.Equal(t, slack.ResponseTypeEphemeral, response.ResponseType)
@@ -34,7 +34,7 @@ func TestResponseBuilder_ErrorMessage(t *testing.T) {
 }
 
 func TestResponseBuilder_NoRunningDeploysMessage(t *testing.T) {
-	b := server.NewResponseBuilder(github.NewClient("", nil))
+	b := bot.NewResponseBuilder(github.NewClient("", nil))
 	response := b.NoRunningDeploysMessage()
 
 	assert.Equal(t, slack.ResponseTypeEphemeral, response.ResponseType)
@@ -48,7 +48,7 @@ func TestResponseBuilder_DeployStatusMessage(t *testing.T) {
 		StartedAt: time.Now(),
 	}
 
-	b := server.NewResponseBuilder(github.NewClient("", nil))
+	b := bot.NewResponseBuilder(github.NewClient("", nil))
 	response := b.DeployStatusMessage(d)
 
 	assert.Equal(t, slack.ResponseTypeEphemeral, response.ResponseType)
@@ -64,7 +64,7 @@ func TestResponseBuilder_DeployInProgressMessage(t *testing.T) {
 		StartedAt: time.Now(),
 	}
 
-	b := server.NewResponseBuilder(github.NewClient("", nil))
+	b := bot.NewResponseBuilder(github.NewClient("", nil))
 	response := b.DeployInProgressMessage(d)
 
 	assert.Equal(t, slack.ResponseTypeEphemeral, response.ResponseType)
@@ -79,7 +79,7 @@ func TestResponseBuilder_DeployInterruptedAnnouncement(t *testing.T) {
 	}
 	user := slack.User{ID: "xyz456", Name: "user2"}
 
-	b := server.NewResponseBuilder(github.NewClient("", nil))
+	b := bot.NewResponseBuilder(github.NewClient("", nil))
 	response := b.DeployInterruptedAnnouncement(d, user)
 
 	assert.Equal(t, slack.ResponseTypeInChannel, response.ResponseType)
@@ -103,7 +103,7 @@ func TestResponseBuilder_DeployAnnouncement(t *testing.T) {
 
 	user := slack.User{ID: "abc123", Name: "user1"}
 
-	b := server.NewResponseBuilder(githubClient)
+	b := bot.NewResponseBuilder(githubClient)
 	response := b.DeployAnnouncement(user, "user1/repo1#123 and user2/repo2#234")
 
 	assert.Equal(t, slack.ResponseTypeInChannel, response.ResponseType)
@@ -126,7 +126,7 @@ func TestResponseBuilder_DeployAnnouncement(t *testing.T) {
 func TestResponseBuilder_DeployDoneAnnouncement(t *testing.T) {
 	user := slack.User{ID: "abc123", Name: "user1"}
 
-	b := server.NewResponseBuilder(github.NewClient("", nil))
+	b := bot.NewResponseBuilder(github.NewClient("", nil))
 	response := b.DeployDoneAnnouncement(user)
 
 	assert.Equal(t, slack.ResponseTypeInChannel, response.ResponseType)

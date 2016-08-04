@@ -8,6 +8,7 @@ import (
 	"os/signal"
 	"syscall"
 
+	"github.com/andrewslotin/slack-deploy-command/bot"
 	"github.com/andrewslotin/slack-deploy-command/deploy"
 	"github.com/andrewslotin/slack-deploy-command/server"
 	"github.com/andrewslotin/slack-deploy-command/slack"
@@ -79,7 +80,7 @@ func main() {
 
 	if slackWebAPIToken := os.Getenv("SLACK_WEBAPI_TOKEN"); slackWebAPIToken != "" {
 		api := slack.NewWebAPI(slackWebAPIToken, nil)
-		srv.AddDeployEventHandler(server.NewSlackTopicManager(api))
+		srv.AddDeployEventHandler(bot.NewSlackTopicManager(api))
 	} else {
 		log.Printf("SLACK_WEBAPI_TOKEN env variable not set, channel topic notifications are disabled")
 	}
