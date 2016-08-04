@@ -85,7 +85,7 @@ func main() {
 		log.Printf("SLACK_WEBAPI_TOKEN env variable not set, channel topic notifications are disabled")
 	}
 
-	srv := server.New(args.host, args.port, slackToken, githubToken, store)
+	srv := server.New(args.host, args.port)
 	if err := srv.Start(slackBot); err != nil {
 		log.Fatal(err)
 	}
