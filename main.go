@@ -76,16 +76,17 @@ func main() {
 		log.Fatalf("failed to open deploy DB: %s", err)
 	}
 
-	srv := server.New(args.host, args.port, slackToken, githubToken, store)
+	slackBot := bot.New(slackToken, githubToken, store)
 
 	if slackWebAPIToken := os.Getenv("SLACK_WEBAPI_TOKEN"); slackWebAPIToken != "" {
 		api := slack.NewWebAPI(slackWebAPIToken, nil)
-		srv.AddDeployEventHandler(bot.NewSlackTopicManager(api))
+		slackBot.AddDeployEventHandler(bot.NewSlackTopicManager(api))
 	} else {
 		log.Printf("SLACK_WEBAPI_TOKEN env variable not set, channel topic notifications are disabled")
 	}
 
-	if err := srv.Start(srv); err != nil {
+	srv := server.New(args.host, args.port, slackToken, githubToken, store)
+	if err := srv.Start(slackBot); err != nil {
 		log.Fatal(err)
 	}
 
