@@ -79,7 +79,7 @@ func (s *BoltDBStore) Set(key string, d Deploy) {
 }
 
 func (*BoltDBStore) deployKey(deploy Deploy) []byte {
-	return []byte(deploy.StartedAt.UTC().Format(time.RFC3339Nano) + "-" + deploy.User.ID)
+	return []byte(deploy.StartedAt.UTC().Format(time.RFC3339) + "-" + deploy.User.ID)
 }
 
 func (s *BoltDBStore) writeDeploy(deploy Deploy, channelBucket *bolt.Bucket) error {
