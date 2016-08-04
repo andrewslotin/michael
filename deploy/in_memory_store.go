@@ -35,3 +35,12 @@ func (s *InMemoryStore) Set(key string, d Deploy) {
 	}
 	s.mu.Unlock()
 }
+
+func (s *InMemoryStore) All(key string) []Deploy {
+	deploys := make([]Deploy, len(s.m[key]))
+	s.mu.RLock()
+	copy(deploys, s.m[key])
+	s.mu.RUnlock()
+
+	return deploys
+}
