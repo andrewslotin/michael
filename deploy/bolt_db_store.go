@@ -78,6 +78,38 @@ func (s *BoltDBStore) Set(key string, d Deploy) {
 	})
 }
 
+func (s *BoltDBStore) All(key string) []Deploy {
+	var deploys []Deploy
+
+	s.db.View(func(tx *bolt.Tx) error {
+		b := tx.Bucket([]byte(key))
+		if b == nil {
+			return nil
+		}
+
+		stats := b.Stats()
+		deploys = make([]Deploy, 0, stats.BucketN-1)
+
+		cur := b.Cursor()
+		for k, v := cur.First(); k != nil; k, v = cur.Next() {
+			if v != nil {
+				continue
+			}
+
+			d, err := s.readDeploy(k, b)
+			if err != nil {
+				return err
+			}
+
+			deploys = append(deploys, d)
+		}
+
+		return nil
+	})
+
+	return deploys
+}
+
 func (*BoltDBStore) deployKey(deploy Deploy) []byte {
 	return []byte(deploy.StartedAt.UTC().Format(time.RFC3339) + "-" + deploy.User.ID)
 }
