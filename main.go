@@ -4,6 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"log"
+	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
@@ -85,8 +86,11 @@ func main() {
 		log.Printf("SLACK_WEBAPI_TOKEN env variable not set, channel topic notifications are disabled")
 	}
 
+	mux := http.NewServeMux()
+	mux.Handle("/", slackBot)
+
 	srv := server.New(args.host, args.port)
-	if err := srv.Start(slackBot); err != nil {
+	if err := srv.Start(mux); err != nil {
 		log.Fatal(err)
 	}
 
