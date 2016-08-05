@@ -75,6 +75,7 @@ func (b *ResponseBuilder) DeployAnnouncement(user slack.User, subject string) *s
 			Title:      fmt.Sprintf("PR #%d: %s", pr.Number, slack.EscapeMessage(pr.Title)),
 			TitleLink:  pr.URL,
 			Text:       pr.Body,
+			Markdown:   true,
 		})
 	}
 
