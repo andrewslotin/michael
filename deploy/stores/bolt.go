@@ -1,7 +1,9 @@
 package stores
 
 import (
+	"encoding/json"
 	"fmt"
+	"strconv"
 	"time"
 
 	"github.com/andrewslotin/slack-deploy-command/deploy"
@@ -14,6 +16,8 @@ const (
 	userNameKey  = "user.name"
 	subjectKey   = "subject"
 	startedAtKey = "started_at"
+
+	archivePrefix = "archive."
 )
 
 type BoltDB struct {
@@ -29,9 +33,9 @@ func NewBoltDB(path string) (*BoltDB, error) {
 	return &BoltDB{db: db}, nil
 }
 
-func (s *BoltDB) Get(key string) (deploy deploy.Deploy, ok bool) {
+func (s *BoltDB) Get(channelID string) (deploy deploy.Deploy, ok bool) {
 	s.db.View(func(tx *bolt.Tx) error {
-		b := tx.Bucket([]byte(key))
+		b := tx.Bucket([]byte(channelID))
 		if b == nil {
 			return nil
 		}
@@ -49,11 +53,11 @@ func (s *BoltDB) Get(key string) (deploy deploy.Deploy, ok bool) {
 	return deploy, ok
 }
 
-func (s *BoltDB) Set(key string, user slack.User, subject string) {
+func (s *BoltDB) Set(channelID string, user slack.User, subject string) {
 	s.db.Update(func(tx *bolt.Tx) error {
-		b, err := tx.CreateBucketIfNotExists([]byte(key))
+		b, err := tx.CreateBucketIfNotExists([]byte(channelID))
 		if err != nil {
-			return fmt.Errorf("failed to store deploy of %s by %s in channel %s: %s", subject, user.Name, key, err)
+			return fmt.Errorf("failed to store deploy of %s by %s in channel %s: %s", subject, user.Name, channelID, err)
 		}
 
 		s.writeDeploy(deploy.Deploy{User: user, Subject: subject, StartedAt: time.Now()}, b)
@@ -62,9 +66,9 @@ func (s *BoltDB) Set(key string, user slack.User, subject string) {
 	})
 }
 
-func (s *BoltDB) Del(key string) (deploy deploy.Deploy, ok bool) {
+func (s *BoltDB) Del(channelID string) (deploy deploy.Deploy, ok bool) {
 	s.db.Update(func(tx *bolt.Tx) error {
-		b := tx.Bucket([]byte(key))
+		b := tx.Bucket([]byte(channelID))
 		if b == nil {
 			return nil
 		}
@@ -74,7 +78,7 @@ func (s *BoltDB) Del(key string) (deploy deploy.Deploy, ok bool) {
 			return err
 		}
 
-		if err = tx.DeleteBucket([]byte(key)); err != nil {
+		if err = tx.DeleteBucket([]byte(channelID)); err != nil {
 			return err
 		}
 
@@ -84,6 +88,66 @@ func (s *BoltDB) Del(key string) (deploy deploy.Deploy, ok bool) {
 	})
 
 	return deploy, ok
+}
+
+func (s *BoltDB) Archive(channelID string, deploy deploy.Deploy) (id uint64, ok bool) {
+	s.db.Update(func(tx *bolt.Tx) error {
+		b, err := tx.CreateBucketIfNotExists([]byte(archivePrefix + channelID))
+		if err != nil {
+			return err
+		}
+
+		buf, err := json.Marshal(deploy)
+		if err != nil {
+			return err
+		}
+
+		id, err = b.NextSequence()
+		if err != nil {
+			return err
+		}
+
+		key := strconv.FormatUint(id, 10)
+		err = b.Put([]byte(key), buf)
+		if err != nil {
+			return err
+		}
+
+		ok = true
+		return nil
+	})
+
+	return id, ok
+}
+
+func (s *BoltDB) FetchAllArchives(channelID string) (deploys []*deploy.Deploy, ok bool) {
+	deploys = []*deploy.Deploy{}
+	s.db.View(func(tx *bolt.Tx) error {
+		b := tx.Bucket([]byte(archivePrefix + channelID))
+		if b == nil {
+			return nil
+		}
+
+		err := b.ForEach(func(k, v []byte) error {
+			deploy := &deploy.Deploy{}
+			err := json.Unmarshal(v, deploy)
+			if err != nil {
+				return err
+			}
+			deploys = append(deploys, deploy)
+
+			return nil
+		})
+
+		if err != nil {
+			return err
+		}
+
+		ok = true
+		return nil
+	})
+
+	return deploys, ok
 }
 
 func (*BoltDB) writeDeploy(deploy deploy.Deploy, b *bolt.Bucket) {

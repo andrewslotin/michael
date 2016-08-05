@@ -6,6 +6,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/andrewslotin/slack-deploy-command/deploy"
 	"github.com/andrewslotin/slack-deploy-command/deploy/stores"
 	"github.com/andrewslotin/slack-deploy-command/slack"
 	"github.com/stretchr/testify/assert"
@@ -86,6 +87,77 @@ func TestBoltDB_Del(t *testing.T) {
 	assert.False(t, ok)
 	_, ok = store.Get("key2")
 	assert.True(t, ok)
+}
+
+func TestBoltDB_Archive(t *testing.T) {
+	path, teardown := setup(t)
+	defer teardown()
+
+	store, err := stores.NewBoltDB(path)
+	require.NoError(t, err)
+
+	now := time.Now().Truncate(time.Second).UTC()
+	deploy1 := deploy.Deploy{
+		Subject: "sub1",
+		User: slack.User{
+			ID:   "1",
+			Name: "a",
+		},
+		StartedAt: now,
+		EndAt:     now.Add(time.Hour),
+	}
+
+	deploy2 := deploy.Deploy{
+		Subject: "sub2",
+		User: slack.User{
+			ID:   "2",
+			Name: "b",
+		},
+		StartedAt: now.Add(time.Hour),
+		EndAt:     now.Add(time.Hour * 2),
+	}
+
+	deploy3 := deploy.Deploy{
+		Subject: "sub3",
+		User: slack.User{
+			ID:   "3",
+			Name: "c",
+		},
+		StartedAt: now.Add(time.Hour),
+		EndAt:     now.Add(time.Hour * 2),
+	}
+
+	id, ok := store.Archive("channel1", deploy1)
+	assert.True(t, ok)
+	assert.Equal(t, id, uint64(1))
+
+	id, ok = store.Archive("channel1", deploy2)
+	assert.True(t, ok)
+	assert.Equal(t, id, uint64(2))
+
+	id, ok = store.Archive("channel2", deploy3)
+	assert.True(t, ok)
+	assert.Equal(t, id, uint64(1))
+
+	deploys1, ok := store.FetchAllArchives("channel1")
+	assert.True(t, ok)
+	assert.Len(t, deploys1, 2)
+
+	assert.Equal(t, "sub1", deploys1[0].Subject)
+	assert.Equal(t, "1", deploys1[0].User.ID)
+	assert.Equal(t, "a", deploys1[0].User.Name)
+	assert.Equal(t, now, deploys1[0].StartedAt)
+	assert.Equal(t, now.Add(time.Hour), deploys1[0].EndAt)
+
+	assert.Equal(t, "sub2", deploys1[1].Subject)
+	assert.Equal(t, "2", deploys1[1].User.ID)
+	assert.Equal(t, "b", deploys1[1].User.Name)
+	assert.Equal(t, now.Add(time.Hour), deploys1[1].StartedAt)
+	assert.Equal(t, now.Add(time.Hour*2), deploys1[1].EndAt)
+
+	deploys2, ok := store.FetchAllArchives("channel2")
+	assert.True(t, ok)
+	assert.Len(t, deploys2, 1)
 }
 
 func setup(t *testing.T) (path string, teardownFn func()) {
