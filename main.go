@@ -10,6 +10,7 @@ import (
 	"syscall"
 
 	"github.com/andrewslotin/slack-deploy-command/bot"
+	"github.com/andrewslotin/slack-deploy-command/dashboard"
 	"github.com/andrewslotin/slack-deploy-command/deploy"
 	"github.com/andrewslotin/slack-deploy-command/server"
 	"github.com/andrewslotin/slack-deploy-command/slack"
@@ -72,12 +73,27 @@ func main() {
 		log.Printf("GITHUB_TOKEN env variable not set, only public PRs details will be displayed in deploy announcements")
 	}
 
-	store, err := getDeployStore()
-	if err != nil {
-		log.Fatalf("failed to open deploy DB: %s", err)
-	}
+	var (
+		slackBot        *bot.Bot
+		deployDashboard *dashboard.Dashboard
+	)
+	if boltDBPath := os.Getenv("BOLTDB_PATH"); boltDBPath != "" {
+		log.Printf("writing deploy history into a BoltDB in %s", boltDBPath)
 
-	slackBot := bot.New(slackToken, githubToken, store)
+		store, err := deploy.NewBoltDBStore(boltDBPath)
+		if err != nil {
+			log.Fatalf("failed to open deploy DB: %s", err)
+		}
+
+		deployDashboard = dashboard.New(store)
+		slackBot = bot.New(slackToken, githubToken, store)
+	} else {
+		log.Println("BOLTDB_PATH env variable not set, keeping deploy history in memory")
+
+		store := deploy.NewInMemoryStore()
+		deployDashboard = dashboard.New(store)
+		slackBot = bot.New(slackToken, githubToken, store)
+	}
 
 	if slackWebAPIToken := os.Getenv("SLACK_WEBAPI_TOKEN"); slackWebAPIToken != "" {
 		api := slack.NewWebAPI(slackWebAPIToken, nil)
@@ -88,6 +104,7 @@ func main() {
 
 	mux := http.NewServeMux()
 	mux.Handle("/deploy", slackBot)
+	mux.Handle("/", deployDashboard)
 
 	srv := server.New(args.host, args.port)
 	if err := srv.Start(mux); err != nil {
@@ -104,16 +121,4 @@ func main() {
 		log.Println("signal received, shutting down...")
 		srv.Shutdown()
 	}
-}
-
-func getDeployStore() (deploy.Store, error) {
-	boltDBPath := os.Getenv("BOLTDB_PATH")
-	if boltDBPath != "" {
-		log.Printf("writing deploy history into a BoltDB in %s", boltDBPath)
-		return deploy.NewBoltDBStore(boltDBPath)
-	}
-
-	log.Println("BOLTDB_PATH env variable not set, keeping deploy history in memory")
-
-	return deploy.NewInMemoryStore(), nil
 }
