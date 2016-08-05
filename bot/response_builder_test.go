@@ -133,6 +133,14 @@ func TestResponseBuilder_DeployDoneAnnouncement(t *testing.T) {
 	assert.Contains(t, response.Text, user.String())
 }
 
+func TestResponseBuilder_DeployHistoryLink(t *testing.T) {
+	b := bot.NewResponseBuilder(github.NewClient("", nil))
+	response := b.DeployHistoryLink("www.example.com:8080", "abc 123")
+
+	assert.Equal(t, slack.ResponseTypeEphemeral, response.ResponseType)
+	assert.Contains(t, response.Text, "https://www.example.com:8080/?channel_id=abc+123")
+}
+
 func setupGitHubTestServer() (baseURL string, mux *http.ServeMux, teardownFn func()) {
 	mux = http.NewServeMux()
 	server := httptest.NewServer(mux)
