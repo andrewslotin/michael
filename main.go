@@ -88,7 +88,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	log.Printf("server is up and running at %s", srv.Addr)
+	log.Printf("slack-deploy-command server v%s is up and running at %s", version, srv.Addr)
 
 	signals := make(chan os.Signal)
 	signal.Notify(signals, os.Interrupt, syscall.SIGTERM)
