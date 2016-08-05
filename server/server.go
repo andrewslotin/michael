@@ -8,6 +8,7 @@ import (
 	"log"
 	"net"
 	"net/http"
+	"time"
 
 	"github.com/andrewslotin/slack-deploy-command/deploy/stores"
 	"github.com/andrewslotin/slack-deploy-command/github"
@@ -102,10 +103,17 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 		sendImmediateResponse(w, s.responses.DeployStatusMessage(d))
 	case "done":
+		now := time.Now()
 		d, ok := s.deploys.Del(channelID)
 		if !ok {
 			sendImmediateResponse(w, s.responses.NoRunningDeploysMessage())
 			return
+		}
+
+		d.EndAt = now
+		ok = s.deploys.Archive(channelID, d)
+		if !ok {
+			log.Printf("error on archiving deploy")
 		}
 
 		if d.User.ID == user.ID {
