@@ -3,6 +3,7 @@ package bot
 import (
 	"fmt"
 	"net/url"
+	"strings"
 	"time"
 
 	"github.com/andrewslotin/slack-deploy-command/deploy"
@@ -88,6 +89,7 @@ func (b *ResponseBuilder) DeployDoneAnnouncement(user slack.User) *slack.Respons
 }
 
 func (*ResponseBuilder) DeployHistoryLink(host, channelID string) *slack.Response {
+	host = strings.TrimSuffix(strings.TrimSuffix(host, ":80"), ":443")
 	return newUserMessage("https://" + host + "/?channel_id=" + url.QueryEscape(channelID))
 }
 

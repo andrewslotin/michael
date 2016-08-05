@@ -141,6 +141,17 @@ func TestResponseBuilder_DeployHistoryLink(t *testing.T) {
 	assert.Contains(t, response.Text, "https://www.example.com:8080/?channel_id=abc+123")
 }
 
+func TestResponseBuilder_DeployHistoryLink_StandardPorts(t *testing.T) {
+	standardPorts := [...]string{"80", "443"}
+
+	b := bot.NewResponseBuilder(github.NewClient("", nil))
+
+	for _, port := range standardPorts {
+		response := b.DeployHistoryLink("www.example.com:"+port, "abc 123")
+		assert.Contains(t, response.Text, "https://www.example.com/?channel_id=abc+123", "port: %s", port)
+	}
+}
+
 func setupGitHubTestServer() (baseURL string, mux *http.ServeMux, teardownFn func()) {
 	mux = http.NewServeMux()
 	server := httptest.NewServer(mux)
