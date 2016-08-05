@@ -87,7 +87,7 @@ func main() {
 	}
 
 	mux := http.NewServeMux()
-	mux.Handle("/", slackBot)
+	mux.Handle("/deploy", slackBot)
 
 	srv := server.New(args.host, args.port)
 	if err := srv.Start(mux); err != nil {
