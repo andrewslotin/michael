@@ -138,7 +138,7 @@ func TestResponseBuilder_DeployHistoryLink(t *testing.T) {
 	response := b.DeployHistoryLink("www.example.com:8080", "abc 123")
 
 	assert.Equal(t, slack.ResponseTypeEphemeral, response.ResponseType)
-	assert.Contains(t, response.Text, "https://www.example.com:8080/?channel_id=abc+123")
+	assert.Contains(t, response.Text, "https://www.example.com:8080/abc%20123")
 }
 
 func TestResponseBuilder_DeployHistoryLink_StandardPorts(t *testing.T) {
@@ -148,7 +148,7 @@ func TestResponseBuilder_DeployHistoryLink_StandardPorts(t *testing.T) {
 
 	for _, port := range standardPorts {
 		response := b.DeployHistoryLink("www.example.com:"+port, "abc 123")
-		assert.Contains(t, response.Text, "https://www.example.com/?channel_id=abc+123", "port: %s", port)
+		assert.Contains(t, response.Text, "https://www.example.com/abc%20123", "port: %s", port)
 	}
 }
 
