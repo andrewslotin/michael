@@ -37,7 +37,7 @@ all: test build
 container: OS = linux
 container: ARCH = amd64
 container: all
-	docker build -t $(PROJECT) .
+	docker build .
 
 clean:
 	go clean
