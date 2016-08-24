@@ -145,7 +145,7 @@ func TestDashboard_MissingChannelID(t *testing.T) {
 	require.NoError(t, err)
 	response.Body.Close()
 
-	assert.Equal(t, http.StatusBadRequest, response.StatusCode)
+	assert.Equal(t, http.StatusNotFound, response.StatusCode)
 }
 
 func setup() (url string, mux *http.ServeMux, teardownFn func()) {
