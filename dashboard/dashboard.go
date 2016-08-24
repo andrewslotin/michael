@@ -42,6 +42,10 @@ func New(repo deploy.Repository) *Dashboard {
 func (h *Dashboard) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	channelID := r.FormValue("channel_id")
 	if channelID == "" {
+		channelID = r.URL.Path[1:]
+	}
+
+	if channelID == "" {
 		http.Error(w, "Missing channel_id", http.StatusBadRequest)
 		return
 	}
