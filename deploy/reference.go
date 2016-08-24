@@ -26,25 +26,31 @@ func FindReferences(s string) []Reference {
 		word := scanner.Text()
 
 		for _, re := range referenceRegexes {
-			m := re.FindStringSubmatch(word)
-			if m == nil {
-				continue
+			if ref, ok := extractReference(word, re); ok {
+				refs = append(refs, ref)
 			}
-
-			var ref Reference
-			for i, name := range re.SubexpNames() {
-				switch name {
-				case "repository":
-					ref.Repository = m[i]
-				case "number":
-					ref.ID = m[i]
-				default:
-					continue
-				}
-			}
-			refs = append(refs, ref)
 		}
 	}
 
 	return refs
+}
+
+func extractReference(s string, re *regexp.Regexp) (ref Reference, ok bool) {
+	m := re.FindStringSubmatch(s)
+	if m == nil {
+		return ref, false
+	}
+
+	for i, name := range re.SubexpNames() {
+		switch name {
+		case "repository":
+			ref.Repository = m[i]
+		case "number":
+			ref.ID = m[i]
+		default:
+			continue
+		}
+	}
+
+	return ref, true
 }
