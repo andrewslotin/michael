@@ -26,7 +26,7 @@ const (
 	deployDoneMessage         = "%s done deploying"
 	deployInterruptedMessage  = "%s has finished the deploy started by %s"
 	deployAnnouncementMessage = "%s is about to deploy %s"
-	deployHistoryLinkMessage  = "Click <https://%s/?channel_id=%s|here> to see deploy history in this channel"
+	deployHistoryLinkMessage  = "Click <https://%s/%s|here> to see deploy history in this channel"
 )
 
 type ResponseBuilder struct {
@@ -92,8 +92,9 @@ func (b *ResponseBuilder) DeployDoneAnnouncement(user slack.User) *slack.Respons
 
 func (*ResponseBuilder) DeployHistoryLink(host, channelID string) *slack.Response {
 	host = strings.TrimSuffix(strings.TrimSuffix(host, ":80"), ":443")
+	path := &url.URL{Path: channelID}
 
-	return newUserMessage(fmt.Sprintf(deployHistoryLinkMessage, host, url.QueryEscape(channelID)))
+	return newUserMessage(fmt.Sprintf(deployHistoryLinkMessage, host, path))
 }
 
 func newUserMessage(s string) *slack.Response {

@@ -44,7 +44,7 @@ func TestDashboard_OneDeploy(t *testing.T) {
 
 	mux.Handle("/", dashboard.New(repo))
 
-	response, err := http.Get(url + "/?channel_id=key1")
+	response, err := http.Get(url + "/key1")
 	require.NoError(t, err)
 
 	assert.Equal(t, http.StatusOK, response.StatusCode)
@@ -83,7 +83,7 @@ func TestDashboard_MultipleDeploys(t *testing.T) {
 
 	mux.Handle("/", dashboard.New(repo))
 
-	response, err := http.Get(url + "/?channel_id=key1")
+	response, err := http.Get(url + "/key1")
 	require.NoError(t, err)
 
 	assert.Equal(t, http.StatusOK, response.StatusCode)
@@ -113,7 +113,7 @@ func TestDashboard_NoDeploys(t *testing.T) {
 
 	mux.Handle("/", dashboard.New(repo))
 
-	response, err := http.Get(url + "/?channel_id=key1")
+	response, err := http.Get(url + "/key1")
 	require.NoError(t, err)
 
 	assert.Equal(t, http.StatusOK, response.StatusCode)
@@ -145,7 +145,7 @@ func TestDashboard_MissingChannelID(t *testing.T) {
 	require.NoError(t, err)
 	response.Body.Close()
 
-	assert.Equal(t, http.StatusBadRequest, response.StatusCode)
+	assert.Equal(t, http.StatusNotFound, response.StatusCode)
 }
 
 func setup() (url string, mux *http.ServeMux, teardownFn func()) {
