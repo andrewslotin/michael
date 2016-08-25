@@ -12,13 +12,21 @@ import (
 )
 
 const (
+	/*
+			helpMessage = `Available commands:
+
+		/deploy help — print help (this message)
+		/deploy <subject> — announce deploy of <subject> in channel
+		/deploy status — show deploy status in channel
+		/deploy done — finish deploy
+		/deploy history — get a link to history of deploys in this channel`
+	*/
 	helpMessage = `Available commands:
 
 /deploy help — print help (this message)
 /deploy <subject> — announce deploy of <subject> in channel
 /deploy status — show deploy status in channel
-/deploy done — finish deploy
-/deploy history — get a link to history of deploys in this channel`
+/deploy done — finish deploy`
 	errorMessage              = "`%s` returned an error %s"
 	noRunningDeploysMessage   = "No one is deploying at the moment"
 	deployStatusMessage       = "%s is deploying %s since %s"
@@ -92,7 +100,8 @@ func (b *ResponseBuilder) DeployDoneAnnouncement(user slack.User) *slack.Respons
 
 func (*ResponseBuilder) DeployHistoryLink(host, channelID string) *slack.Response {
 	host = strings.TrimSuffix(strings.TrimSuffix(host, ":80"), ":443")
-	path := &url.URL{Path: channelID}
+	path := &url.URL{
+		Path: channelID}
 
 	return newUserMessage(fmt.Sprintf(deployHistoryLinkMessage, host, path))
 }

@@ -86,8 +86,10 @@ func (b *Bot) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		for _, h := range b.deployEventHandlers {
 			go h.DeployCompleted(channelID)
 		}
-	case "history":
-		sendImmediateResponse(w, b.responses.DeployHistoryLink(r.Host, channelID))
+		/*
+			case "history":
+				sendImmediateResponse(w, b.responses.DeployHistoryLink(r.Host, channelID))
+		*/
 	default:
 		d, ok := b.deploys.Start(channelID, deploy.New(user, subject))
 		if !ok {

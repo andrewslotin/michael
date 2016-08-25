@@ -104,7 +104,8 @@ func main() {
 
 	mux := http.NewServeMux()
 	mux.Handle("/deploy", slackBot)
-	mux.Handle("/", deployDashboard)
+	// mux.Handle("/", deployDashboard)
+	mux.Handle("/", http.NotFoundHandler())
 
 	srv := server.New(args.host, args.port)
 	if err := srv.Start(mux); err != nil {
