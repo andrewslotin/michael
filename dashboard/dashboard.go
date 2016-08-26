@@ -1,9 +1,9 @@
 package dashboard
 
 import (
-	"html/template"
 	"net/http"
 	"strings"
+	"text/template"
 	"time"
 
 	"github.com/andrewslotin/slack-deploy-command/deploy"

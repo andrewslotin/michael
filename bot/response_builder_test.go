@@ -133,9 +133,17 @@ func TestResponseBuilder_DeployDoneAnnouncement(t *testing.T) {
 	assert.Contains(t, response.Text, user.String())
 }
 
-func TestResponseBuilder_DeployHistoryLink(t *testing.T) {
+func TestResponseBuilder_DeployHistoryLink_WithAuthToken(t *testing.T) {
 	b := bot.NewResponseBuilder(github.NewClient("", nil))
-	response := b.DeployHistoryLink("www.example.com:8080", "abc 123")
+	response := b.DeployHistoryLink("www.example.com:8080", "abc 123", "secret token")
+
+	assert.Equal(t, slack.ResponseTypeEphemeral, response.ResponseType)
+	assert.Contains(t, response.Text, "https://www.example.com:8080/abc%20123?token=secret+token")
+}
+
+func TestResponseBuilder_DeployHistoryLink_EmptyAuthToken(t *testing.T) {
+	b := bot.NewResponseBuilder(github.NewClient("", nil))
+	response := b.DeployHistoryLink("www.example.com:8080", "abc 123", "")
 
 	assert.Equal(t, slack.ResponseTypeEphemeral, response.ResponseType)
 	assert.Contains(t, response.Text, "https://www.example.com:8080/abc%20123")
@@ -147,7 +155,7 @@ func TestResponseBuilder_DeployHistoryLink_StandardPorts(t *testing.T) {
 	b := bot.NewResponseBuilder(github.NewClient("", nil))
 
 	for _, port := range standardPorts {
-		response := b.DeployHistoryLink("www.example.com:"+port, "abc 123")
+		response := b.DeployHistoryLink("www.example.com:"+port, "abc 123", "")
 		assert.Contains(t, response.Text, "https://www.example.com/abc%20123", "port: %s", port)
 	}
 }

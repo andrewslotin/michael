@@ -4,11 +4,14 @@ import (
 	"flag"
 	"fmt"
 	"log"
+	"math/rand"
 	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 
+	"github.com/andrewslotin/slack-deploy-command/auth"
 	"github.com/andrewslotin/slack-deploy-command/bot"
 	"github.com/andrewslotin/slack-deploy-command/dashboard"
 	"github.com/andrewslotin/slack-deploy-command/deploy"
@@ -102,9 +105,14 @@ func main() {
 		log.Printf("SLACK_WEBAPI_TOKEN env variable not set, channel topic notifications are disabled")
 	}
 
+	tokenSource := auth.RandomTokenSource{Src: rand.NewSource(time.Now().UnixNano())}
+	authorizer := auth.NewOneTimeTokenAuthorizer(&tokenSource)
+
+	slackBot.SetDashboardAuthorizer(authorizer)
+
 	mux := http.NewServeMux()
 	mux.Handle("/deploy", slackBot)
-	mux.Handle("/", deployDashboard)
+	mux.Handle("/", auth.TokenAuthMiddleware(deployDashboard, authorizer))
 
 	srv := server.New(args.host, args.port)
 	if err := srv.Start(mux); err != nil {

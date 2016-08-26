@@ -90,9 +90,15 @@ func (b *ResponseBuilder) DeployDoneAnnouncement(user slack.User) *slack.Respons
 	return newAnnouncement(fmt.Sprintf(deployDoneMessage, user))
 }
 
-func (*ResponseBuilder) DeployHistoryLink(host, channelID string) *slack.Response {
+func (*ResponseBuilder) DeployHistoryLink(host, channelID, authToken string) *slack.Response {
 	host = strings.TrimSuffix(strings.TrimSuffix(host, ":80"), ":443")
 	path := &url.URL{Path: channelID}
+
+	if authToken != "" {
+		q := path.Query()
+		q.Set("token", authToken)
+		path.RawQuery = q.Encode()
+	}
 
 	return newUserMessage(fmt.Sprintf(deployHistoryLinkMessage, host, path))
 }
