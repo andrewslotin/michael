@@ -7,6 +7,7 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/andrewslotin/slack-deploy-command/auth"
 	"github.com/andrewslotin/slack-deploy-command/deploy"
 	"github.com/andrewslotin/slack-deploy-command/github"
 	"github.com/andrewslotin/slack-deploy-command/slack"
@@ -18,23 +19,33 @@ type DeployEventHandler interface {
 }
 
 type Bot struct {
-	slackToken string
-	deploys    *deploy.ChannelDeploys
-	responses  *ResponseBuilder
+	slackToken    string
+	deploys       *deploy.ChannelDeploys
+	responses     *ResponseBuilder
+	dashboardAuth auth.TokenIssuer
 
 	deployEventHandlers []DeployEventHandler
 }
 
 func New(slackToken, githubToken string, store deploy.Store) *Bot {
 	return &Bot{
-		slackToken: slackToken,
-		deploys:    deploy.NewChannelDeploys(store),
-		responses:  NewResponseBuilder(github.NewClient(githubToken, nil)),
+		slackToken:    slackToken,
+		deploys:       deploy.NewChannelDeploys(store),
+		responses:     NewResponseBuilder(github.NewClient(githubToken, nil)),
+		dashboardAuth: auth.None,
 	}
 }
 
 func (b *Bot) AddDeployEventHandler(h DeployEventHandler) {
 	b.deployEventHandlers = append(b.deployEventHandlers, h)
+}
+
+func (b *Bot) SetDashboardAuthorizer(issuer auth.TokenIssuer) {
+	if issuer == nil {
+		b.dashboardAuth = auth.None
+	}
+
+	b.dashboardAuth = issuer
 }
 
 func (b *Bot) ServeHTTP(w http.ResponseWriter, r *http.Request) {
