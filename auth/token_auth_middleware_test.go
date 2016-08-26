@@ -7,30 +7,11 @@ import (
 	"testing"
 
 	"github.com/andrewslotin/slack-deploy-command/auth"
+	"github.com/andrewslotin/slack-deploy-command/auth/authtest"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 )
 
-/*      Test objects      */
-type tokenAuthorizerMock struct {
-	mock.Mock
-}
-
-func (m tokenAuthorizerMock) Authorize(token string) bool {
-	return m.Called(token).Get(0).(bool)
-}
-
-type handlerMock struct {
-	mock.Mock
-}
-
-func (m handlerMock) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	m.Called(w, r)
-	w.Write(nil)
-}
-
-/*          Tests         */
 func TestTokenAuthMiddleware_ValidToken(t *testing.T) {
 	token := "token1"
 
@@ -39,8 +20,8 @@ func TestTokenAuthMiddleware_ValidToken(t *testing.T) {
 	require.NoError(t, err)
 
 	var (
-		handler    handlerMock
-		authorizer tokenAuthorizerMock
+		handler    authtest.HandlerMock
+		authorizer authtest.TokenAuthorizerMock
 	)
 	handler.On("ServeHTTP", recorder, req).Return().Once()
 	authorizer.On("Authorize", token).Return(true)
@@ -60,8 +41,8 @@ func TestTokenAuthMiddleware_InvalidToken(t *testing.T) {
 	require.NoError(t, err)
 
 	var (
-		handler    handlerMock
-		authorizer tokenAuthorizerMock
+		handler    authtest.HandlerMock
+		authorizer authtest.TokenAuthorizerMock
 	)
 	authorizer.On("Authorize", token).Return(false)
 
@@ -79,8 +60,8 @@ func TestTokenAuthMiddleware_MissingToken(t *testing.T) {
 	require.NoError(t, err)
 
 	var (
-		handler    handlerMock
-		authorizer tokenAuthorizerMock
+		handler    authtest.HandlerMock
+		authorizer authtest.TokenAuthorizerMock
 	)
 
 	auth.TokenAuthMiddleware(handler, authorizer).ServeHTTP(recorder, req)

@@ -4,29 +4,13 @@ import (
 	"testing"
 
 	"github.com/andrewslotin/slack-deploy-command/auth"
+	"github.com/andrewslotin/slack-deploy-command/auth/authtest"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 )
 
-/*      Test object       */
-type staticTokenSource string
-
-func (src staticTokenSource) Generate(tokenLen int) string {
-	return string(src)
-}
-
-type tokenSourceMock struct {
-	mock.Mock
-}
-
-func (src *tokenSourceMock) Generate(tokenLen int) string {
-	return src.Called(tokenLen).Get(0).(string)
-}
-
-/*         Tests          */
 func TestOneTimeTokenAuthorizer_IssueToken(t *testing.T) {
-	src := new(tokenSourceMock)
+	src := new(authtest.TokenSourceMock)
 	src.On("Generate", 10).Return("abcdef1234")
 	src.On("Generate", 5).Return("xyz12")
 
@@ -44,7 +28,7 @@ func TestOneTimeTokenAuthorizer_IssueToken(t *testing.T) {
 }
 
 func TestOneTimeTokenAuthorizer_IssueToken_Uniqueness(t *testing.T) {
-	authorizer := auth.NewOneTimeTokenAuthorizer(staticTokenSource("token1"))
+	authorizer := auth.NewOneTimeTokenAuthorizer(authtest.StaticTokenSource("token1"))
 
 	token, err := authorizer.IssueToken(1)
 	require.NoError(t, err)
@@ -55,7 +39,7 @@ func TestOneTimeTokenAuthorizer_IssueToken_Uniqueness(t *testing.T) {
 }
 
 func TestOneTimeTokenAuthorizer_Authorize(t *testing.T) {
-	authorizer := auth.NewOneTimeTokenAuthorizer(staticTokenSource("token1"))
+	authorizer := auth.NewOneTimeTokenAuthorizer(authtest.StaticTokenSource("token1"))
 	assert.False(t, authorizer.Authorize("token1"))
 
 	token, err := authorizer.IssueToken(1)
