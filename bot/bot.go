@@ -98,7 +98,13 @@ func (b *Bot) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			go h.DeployCompleted(channelID)
 		}
 	case "history":
-		sendImmediateResponse(w, b.responses.DeployHistoryLink(r.Host, channelID))
+		dashboardToken, err := b.dashboardAuth.IssueToken(auth.DefaultTokenLength)
+		if err != nil {
+			sendImmediateResponse(w, b.responses.ErrorMessage("history", err))
+			return
+		}
+
+		sendImmediateResponse(w, b.responses.DeployHistoryLink(r.Host, channelID, dashboardToken))
 	default:
 		d, ok := b.deploys.Start(channelID, deploy.New(user, subject))
 		if !ok {

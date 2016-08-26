@@ -1,5 +1,8 @@
 package auth
 
+// DefaultTokenLength is the default length for IssueToken
+const DefaultTokenLength = 16
+
 // TokenAuthorizer is an interface that wraps Authorize method.
 //
 // Authorize is used to check token authenticity.
