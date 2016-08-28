@@ -4,6 +4,7 @@ import (
 	"crypto/rand"
 	"crypto/rsa"
 	"net/http"
+	"net/http/httptest"
 	"testing"
 	"time"
 
@@ -113,4 +114,14 @@ func TestParseChannelAccessTokenClaims_UnexpectedSigningMethod(t *testing.T) {
 
 	_, err = auth.ParseChannelAccessTokenClaims(tokenString, pkey)
 	assert.Equal(t, auth.ErrInvalidSigningMethod, err)
+}
+
+func TestStoreChannelAccessToken(t *testing.T) {
+	expirationTime := time.Now().Add(time.Hour)
+	recorder := httptest.NewRecorder()
+
+	auth.StoreChannelAccessToken(recorder, "token1", expirationTime)
+
+	cookie := &http.Cookie{Name: "Auth", Value: "token1", Expires: expirationTime}
+	assert.Equal(t, recorder.Header().Get("Set-Cookie"), cookie.String())
 }

@@ -2,9 +2,14 @@ package auth
 
 import (
 	"net/http"
+	"time"
 
 	jwt "github.com/dgrijalva/jwt-go"
 )
+
+// ChannelAccessTokenExpirationPeriod is the default channel access expiration period.
+// Once granted channel access needs to be renewed after 30 days.
+const ChannelAccessTokenExpirationPeriod = 30 * 24 * time.Hour
 
 // ChannelAccessTokenFromRequest reads and returns signed JWT from request. If the request doesn't contain
 // access token this method returns an empty string.
@@ -51,4 +56,15 @@ func ParseChannelAccessTokenClaims(tokenString string, key interface{}) (claims 
 	}
 
 	return claims, nil
+}
+
+// StoreChannelAccessToken writes tokenString into Auth= cookie expiring in expTime.
+func StoreChannelAccessToken(w http.ResponseWriter, tokenString string, expTime time.Time) {
+	cookie := &http.Cookie{
+		Name:    "Auth",
+		Value:   tokenString,
+		Expires: expTime,
+	}
+
+	http.SetCookie(w, cookie)
 }
