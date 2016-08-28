@@ -4,8 +4,6 @@ import (
 	"log"
 	"net/http"
 	"time"
-
-	jwt "github.com/dgrijalva/jwt-go"
 )
 
 type ChannelAuthorizer struct {
@@ -31,7 +29,7 @@ func (h *ChannelAuthorizer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	tokenString := h.tokenFromRequest(r)
+	tokenString := ChannelAccessTokenFromRequest(r)
 	if tokenString == "" {
 		http.Error(w, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
 		return
@@ -56,40 +54,10 @@ func (h *ChannelAuthorizer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (h *ChannelAuthorizer) tokenFromRequest(r *http.Request) string {
-	authCookie, err := r.Cookie("Auth")
-	if err != nil {
-		return ""
-	}
-
-	return authCookie.Value
-}
-
 func (h *ChannelAuthorizer) checkAccess(channelID, signedToken string) error {
-	token, err := jwt.ParseWithClaims(signedToken, &JWTChannelClaims{}, func(token *jwt.Token) (interface{}, error) {
-		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-			return nil, ErrInvalidSigningMethod
-		}
-
-		return h.secret, nil
-	})
+	claims, err := ParseChannelAccessTokenClaims(signedToken, h.secret)
 	if err != nil {
-		if validationErr, ok := err.(*jwt.ValidationError); ok {
-			switch {
-			case validationErr.Errors&jwt.ValidationErrorExpired|jwt.ValidationErrorNotValidYet != 0:
-				return ErrExpiredToken
-			}
-		}
-
 		return err
-	}
-	if !token.Valid {
-		return ErrInvalidToken
-	}
-
-	claims, ok := token.Claims.(*JWTChannelClaims)
-	if !ok {
-		return ErrInvalidTokenFormat
 	}
 
 	expiresAt, ok := claims.Channels[channelID]

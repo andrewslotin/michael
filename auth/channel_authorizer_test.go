@@ -37,7 +37,11 @@ func TestChannelAuthorizerMiddleware_ValidToken_WithChannelAccess(t *testing.T) 
 
 	req, err := http.NewRequest("GET", "/channel1", nil)
 	require.NoError(t, err)
-	authorizeRequest(req, signedToken)
+
+	req.AddCookie(&http.Cookie{
+		Name:  "Auth",
+		Value: signedToken,
+	})
 
 	handler.On("ServeHTTP", recorder, req).Return().Once()
 
@@ -70,7 +74,11 @@ func TestChannelAuthorizerMiddleware_ValidToken_NoChannelAccess(t *testing.T) {
 
 	req, err := http.NewRequest("GET", "/channel1", nil)
 	require.NoError(t, err)
-	authorizeRequest(req, signedToken)
+
+	req.AddCookie(&http.Cookie{
+		Name:  "Auth",
+		Value: signedToken,
+	})
 
 	auth.ChannelAuthorizerMiddleware(handler, jwtSecret).ServeHTTP(recorder, req)
 	assert.Equal(t, http.StatusUnauthorized, recorder.Code)
@@ -98,7 +106,11 @@ func TestChannelAuthorizerMiddleware_ValidToken_ExpiredChannelAccess(t *testing.
 
 	req, err := http.NewRequest("GET", "/channel1", nil)
 	require.NoError(t, err)
-	authorizeRequest(req, signedToken)
+
+	req.AddCookie(&http.Cookie{
+		Name:  "Auth",
+		Value: signedToken,
+	})
 
 	auth.ChannelAuthorizerMiddleware(handler, jwtSecret).ServeHTTP(recorder, req)
 	assert.Equal(t, http.StatusUnauthorized, recorder.Code)
@@ -125,7 +137,11 @@ func TestChannelAuthorizerMiddleware_ExpiredToken(t *testing.T) {
 
 	req, err := http.NewRequest("GET", "/channel1", nil)
 	require.NoError(t, err)
-	authorizeRequest(req, signedToken)
+
+	req.AddCookie(&http.Cookie{
+		Name:  "Auth",
+		Value: signedToken,
+	})
 
 	auth.ChannelAuthorizerMiddleware(authtest.HandlerMock{}, jwtSecret).ServeHTTP(recorder, req)
 	assert.Equal(t, http.StatusUnauthorized, recorder.Code)
@@ -152,7 +168,11 @@ func TestChannelAuthorizerMiddleware_SignatureMismatch(t *testing.T) {
 
 	req, err := http.NewRequest("GET", "/channel1", nil)
 	require.NoError(t, err)
-	authorizeRequest(req, signedToken)
+
+	req.AddCookie(&http.Cookie{
+		Name:  "Auth",
+		Value: signedToken,
+	})
 
 	auth.ChannelAuthorizerMiddleware(authtest.HandlerMock{}, []byte("a very secret secret")).ServeHTTP(recorder, req)
 	assert.Equal(t, http.StatusUnauthorized, recorder.Code, "Response: %q", recorder.Body)
@@ -179,10 +199,14 @@ func TestChannelAuthorizerMiddleware_UnexpectedSigningMethod(t *testing.T) {
 
 	req, err := http.NewRequest("GET", "/channel1", nil)
 	require.NoError(t, err)
-	authorizeRequest(req, signedToken)
+
+	req.AddCookie(&http.Cookie{
+		Name:  "Auth",
+		Value: signedToken,
+	})
 
 	auth.ChannelAuthorizerMiddleware(authtest.HandlerMock{}, []byte("test secret")).ServeHTTP(recorder, req)
-	assert.Equal(t, http.StatusUnauthorized, recorder.Code, "Response: %q", recorder.Body)
+	assert.Equal(t, http.StatusBadRequest, recorder.Code, "Response: %q", recorder.Body)
 }
 
 func TestChannelAuthorizerMiddleware_NoChannelID(t *testing.T) {
@@ -204,15 +228,12 @@ func TestChannelAuthorizerMiddleware_NoChannelID(t *testing.T) {
 
 	req, err := http.NewRequest("GET", "/", nil)
 	require.NoError(t, err)
-	authorizeRequest(req, signedToken)
 
-	auth.ChannelAuthorizerMiddleware(handler, jwtSecret).ServeHTTP(recorder, req)
-	assert.Equal(t, http.StatusNotFound, recorder.Code)
-}
-
-func authorizeRequest(req *http.Request, signedToken string) {
 	req.AddCookie(&http.Cookie{
 		Name:  "Auth",
 		Value: signedToken,
 	})
+
+	auth.ChannelAuthorizerMiddleware(handler, jwtSecret).ServeHTTP(recorder, req)
+	assert.Equal(t, http.StatusNotFound, recorder.Code)
 }
