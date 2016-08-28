@@ -118,7 +118,7 @@ func main() {
 
 	mux := http.NewServeMux()
 	mux.Handle("/deploy", slackBot)
-	mux.Handle("/", auth.TokenAuthenticationMiddleware(auth.ChannelAuthorizerMiddleware(deployDashboard, []byte(authSecret)), authenticator))
+	mux.Handle("/", auth.TokenAuthenticationMiddleware(auth.ChannelAuthorizerMiddleware(deployDashboard, []byte(authSecret)), authenticator, []byte(authSecret)))
 
 	srv := server.New(args.host, args.port)
 	if err := srv.Start(mux); err != nil {
