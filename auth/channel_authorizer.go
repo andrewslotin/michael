@@ -1,7 +1,7 @@
 package auth
 
 import (
-	"errors"
+	"log"
 	"net/http"
 	"time"
 
@@ -39,7 +39,13 @@ func (h *ChannelAuthorizer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	err := h.checkAccess(channelID, tokenString)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusUnauthorized)
+		if authError, ok := err.(Error); ok {
+			http.Error(w, authError.Message, authError.Code)
+		} else {
+			log.Printf("failed to check channel access: %s", err)
+			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+		}
+
 		return
 	}
 
@@ -62,7 +68,7 @@ func (h *ChannelAuthorizer) tokenFromRequest(r *http.Request) string {
 func (h *ChannelAuthorizer) checkAccess(channelID, signedToken string) error {
 	token, err := jwt.ParseWithClaims(signedToken, &JWTChannelClaims{}, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-			return nil, errors.New("Unsupported token signing method")
+			return nil, ErrInvalidSigningMethod
 		}
 
 		return h.secret, nil
@@ -71,27 +77,27 @@ func (h *ChannelAuthorizer) checkAccess(channelID, signedToken string) error {
 		if validationErr, ok := err.(*jwt.ValidationError); ok {
 			switch {
 			case validationErr.Errors&jwt.ValidationErrorExpired|jwt.ValidationErrorNotValidYet != 0:
-				return errors.New("Token is expired")
+				return ErrExpiredToken
 			}
 		}
 
 		return err
 	}
 	if !token.Valid {
-		return errors.New("Invalid token")
+		return ErrInvalidToken
 	}
 
 	claims, ok := token.Claims.(*JWTChannelClaims)
 	if !ok {
-		return errors.New("Invalid token format")
+		return ErrInvalidTokenFormat
 	}
 
 	expiresAt, ok := claims.Channels[channelID]
 	switch {
 	case !ok:
-		return errors.New("No channel access")
+		return ErrNoChannelAccess
 	case time.Now().After(expiresAt):
-		return errors.New("Channel access expired")
+		return ErrExpiredChannelAccess
 	default:
 		return nil
 	}
