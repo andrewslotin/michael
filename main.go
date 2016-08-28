@@ -106,13 +106,13 @@ func main() {
 	}
 
 	tokenSource := auth.RandomTokenSource{Src: rand.NewSource(time.Now().UnixNano())}
-	authorizer := auth.NewOneTimeTokenAuthorizer(&tokenSource)
+	authenticator := auth.NewOneTimeTokenAuthenticator(&tokenSource)
 
-	slackBot.SetDashboardAuthorizer(authorizer)
+	slackBot.SetDashboardAuth(authenticator)
 
 	mux := http.NewServeMux()
 	mux.Handle("/deploy", slackBot)
-	mux.Handle("/", auth.TokenAuthMiddleware(deployDashboard, authorizer))
+	mux.Handle("/", auth.TokenAuthenticationMiddleware(deployDashboard, authenticator))
 
 	srv := server.New(args.host, args.port)
 	if err := srv.Start(mux); err != nil {

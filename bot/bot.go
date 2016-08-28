@@ -40,7 +40,7 @@ func (b *Bot) AddDeployEventHandler(h DeployEventHandler) {
 	b.deployEventHandlers = append(b.deployEventHandlers, h)
 }
 
-func (b *Bot) SetDashboardAuthorizer(issuer auth.TokenIssuer) {
+func (b *Bot) SetDashboardAuth(issuer auth.TokenIssuer) {
 	if issuer == nil {
 		b.dashboardAuth = auth.None
 	}

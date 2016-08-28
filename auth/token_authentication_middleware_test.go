@@ -12,7 +12,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestTokenAuthMiddleware_ValidToken(t *testing.T) {
+func TestTokenAuthenticationMiddleware_ValidToken(t *testing.T) {
 	token := "token1"
 
 	recorder := httptest.NewRecorder()
@@ -20,20 +20,20 @@ func TestTokenAuthMiddleware_ValidToken(t *testing.T) {
 	require.NoError(t, err)
 
 	var (
-		handler    authtest.HandlerMock
-		authorizer authtest.TokenAuthorizerMock
+		handler       authtest.HandlerMock
+		authenticator authtest.TokenAuthenticatorMock
 	)
 	handler.On("ServeHTTP", recorder, req).Return().Once()
-	authorizer.On("Authorize", token).Return(true)
+	authenticator.On("Authenticate", token).Return(true)
 
-	auth.TokenAuthMiddleware(handler, authorizer).ServeHTTP(recorder, req)
+	auth.TokenAuthenticationMiddleware(handler, authenticator).ServeHTTP(recorder, req)
 	assert.Equal(t, http.StatusOK, recorder.Code)
 
 	handler.AssertExpectations(t)
-	authorizer.AssertExpectations(t)
+	authenticator.AssertExpectations(t)
 }
 
-func TestTokenAuthMiddleware_InvalidToken(t *testing.T) {
+func TestTokenAuthenticationMiddleware_InvalidToken(t *testing.T) {
 	token := "token1"
 
 	recorder := httptest.NewRecorder()
@@ -41,30 +41,30 @@ func TestTokenAuthMiddleware_InvalidToken(t *testing.T) {
 	require.NoError(t, err)
 
 	var (
-		handler    authtest.HandlerMock
-		authorizer authtest.TokenAuthorizerMock
+		handler       authtest.HandlerMock
+		authenticator authtest.TokenAuthenticatorMock
 	)
-	authorizer.On("Authorize", token).Return(false)
+	authenticator.On("Authenticate", token).Return(false)
 
-	auth.TokenAuthMiddleware(handler, authorizer).ServeHTTP(recorder, req)
+	auth.TokenAuthenticationMiddleware(handler, authenticator).ServeHTTP(recorder, req)
 	assert.Equal(t, http.StatusUnauthorized, recorder.Code)
 	assert.Equal(t, http.StatusText(http.StatusUnauthorized), strings.TrimSpace(recorder.Body.String()))
 
 	handler.AssertExpectations(t)
-	authorizer.AssertExpectations(t)
+	authenticator.AssertExpectations(t)
 }
 
-func TestTokenAuthMiddleware_MissingToken(t *testing.T) {
+func TestTokenAuthenticationMiddleware_MissingToken(t *testing.T) {
 	recorder := httptest.NewRecorder()
 	req, err := http.NewRequest("GET", "/", nil)
 	require.NoError(t, err)
 
 	var (
-		handler    authtest.HandlerMock
-		authorizer authtest.TokenAuthorizerMock
+		handler       authtest.HandlerMock
+		authenticator authtest.TokenAuthenticatorMock
 	)
 
-	auth.TokenAuthMiddleware(handler, authorizer).ServeHTTP(recorder, req)
+	auth.TokenAuthenticationMiddleware(handler, authenticator).ServeHTTP(recorder, req)
 	assert.Equal(t, http.StatusUnauthorized, recorder.Code)
 	assert.Equal(t, "Missing token", strings.TrimSpace(recorder.Body.String()))
 

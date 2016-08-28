@@ -5,16 +5,16 @@ import (
 	"sync"
 )
 
-// OneTimeTokenAuthorizer issues tokens that can be used for authorization only once.
-type OneTimeTokenAuthorizer struct {
+// OneTimeTokenAuthenticator issues tokens that can be used for authorization only once.
+type OneTimeTokenAuthenticator struct {
 	gen    TokenGenerator
 	mu     sync.Mutex
 	tokens map[string]struct{}
 }
 
-// NewOneTimeTokenAuthorizer returns an instance of *OneTimeTokenAuthorizer that uses src as a token source.
-func NewOneTimeTokenAuthorizer(src TokenGenerator) *OneTimeTokenAuthorizer {
-	return &OneTimeTokenAuthorizer{
+// NewOneTimeTokenAuthenticator returns an instance of *OneTimeTokenAuthenticator that uses src as a token source.
+func NewOneTimeTokenAuthenticator(src TokenGenerator) *OneTimeTokenAuthenticator {
+	return &OneTimeTokenAuthenticator{
 		gen:    src,
 		tokens: make(map[string]struct{}, 50),
 	}
@@ -22,7 +22,7 @@ func NewOneTimeTokenAuthorizer(src TokenGenerator) *OneTimeTokenAuthorizer {
 
 // IssueToken generates and stores a new unused token. This method returns an error if it failed to generate
 // an unused token after 16777216 (2^24) attempts.
-func (s *OneTimeTokenAuthorizer) IssueToken(tokenLen int) (token string, err error) {
+func (s *OneTimeTokenAuthenticator) IssueToken(tokenLen int) (token string, err error) {
 	const maxAttempts = 1 << 20
 
 	s.mu.Lock()
@@ -42,8 +42,8 @@ func (s *OneTimeTokenAuthorizer) IssueToken(tokenLen int) (token string, err err
 	return token, nil
 }
 
-// Authorize checks if provided token has been issued by this instance of OneTimeTokenAuthorizer and annuls it.
-func (s *OneTimeTokenAuthorizer) Authorize(token string) bool {
+// Authenticate checks if provided token has been issued by this instance of OneTimeTokenAuthenticator and annuls it.
+func (s *OneTimeTokenAuthenticator) Authenticate(token string) bool {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
@@ -55,7 +55,7 @@ func (s *OneTimeTokenAuthorizer) Authorize(token string) bool {
 	return true
 }
 
-func (s *OneTimeTokenAuthorizer) exists(token string) bool {
+func (s *OneTimeTokenAuthenticator) exists(token string) bool {
 	_, ok := s.tokens[token]
 
 	return ok
