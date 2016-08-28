@@ -77,6 +77,31 @@ your BoltDB file in `BOLTDB_PATH` environment variable.
 BOLTDB_PATH=/path/to/your/bolt.db $GOPATH/bin/slack-deploy-command
 ```
 
+### Deploy history
+
+To see the history of deploys in channel run <kbd>/deploy history</kbd> in this channel and click the link returned by bot.
+
+![Channel history link](../master/docs/deploy-history.jpg)
+
+This will open a page in your browser with all deploys that were ever announced in this channel.
+
+```
+* suddendef was deploying https://github.com/andrewslotin/slack-deploy-command/pull/15 since 24 Aug 16 20:54 UTC until 24 Aug 16 20:54 UTC
+* suddendef was deploying https://github.com/andrewslotin/slack-deploy-command/pull/15 https://github.com/andrewslotin/slack-deploy-command/pull/11 since 24 Aug 16 20:54 UTC until 24 Aug 16 20:55 UTC
+* suddendef was deploying history since 25 Aug 16 08:35 UTC until 25 Aug 16 08:35 UTC
+* suddendef was deploying https://github.com/andrewslotin/slack-deploy-command/pull/19 since 25 Aug 16 08:35 UTC until 25 Aug 16 08:35 UTC
+```
+
+#### Authorization and authentication
+
+While handling the <kbd>/deploy history</kbd> command deploy bot generates a one-time token that grants access to current channel
+deploy history. This access is being granted for the next 30 days and can be renewed at any time by requesting and opening a link
+to history in the same channel.
+
+Deploy bot uses JSON Web Tokens (JWT) to store channel access lists. A secret key to sign JWT can be set via `HISTORY_AUTH_SECRET`
+environment variable. If there was no secret provided, deploy bot generates a random string and writes it into the log. On next
+start you should use this string as a value for `HISTORY_AUTH_SECRET`, otherwise all issued authorizations will be revoked.
+
 License
 -------
 

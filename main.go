@@ -106,13 +106,19 @@ func main() {
 	}
 
 	tokenSource := auth.RandomTokenSource{Src: rand.NewSource(time.Now().UnixNano())}
-	authorizer := auth.NewOneTimeTokenAuthorizer(&tokenSource)
+	authenticator := auth.NewOneTimeTokenAuthenticator(&tokenSource)
 
-	slackBot.SetDashboardAuthorizer(authorizer)
+	authSecret := os.Getenv("HISTORY_AUTH_SECRET")
+	if authSecret == "" {
+		authSecret = tokenSource.Generate(128)
+		log.Printf("HISTORY_AUTH_SECRET is not set, using randomly generated %q", authSecret)
+	}
+
+	slackBot.SetDashboardAuth(authenticator)
 
 	mux := http.NewServeMux()
 	mux.Handle("/deploy", slackBot)
-	mux.Handle("/", auth.TokenAuthMiddleware(deployDashboard, authorizer))
+	mux.Handle("/", auth.TokenAuthenticationMiddleware(auth.ChannelAuthorizerMiddleware(deployDashboard, []byte(authSecret)), authenticator, []byte(authSecret)))
 
 	srv := server.New(args.host, args.port)
 	if err := srv.Start(mux); err != nil {

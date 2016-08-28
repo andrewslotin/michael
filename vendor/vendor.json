@@ -7,6 +7,43 @@
 			"path": "github.com/boltdb/bolt",
 			"revision": "acc803f0ced151102ed51bf824f8709ebd6602bc",
 			"revisionTime": "2016-07-07T16:56:50Z"
+		},
+		{
+			"checksumSHA1": "EsJksAKyY2+r3mY+rdNocSCe1wg=",
+			"path": "github.com/dgrijalva/jwt-go",
+			"revision": "63734eae1ef55eaac06fdc0f312615f2e321e273",
+			"revisionTime": "2016-07-29T16:48:51Z"
+		},
+		{
+			"checksumSHA1": "EO+jcRet/AJ6IY3lBO8l8BLsZWg=",
+			"origin": "github.com/stretchr/testify/vendor/github.com/stretchr/objx",
+			"path": "github.com/stretchr/objx",
+			"revision": "c5d7a69bf8a2c9c374798160849c071093e41dd1",
+			"revisionTime": "2016-04-18T22:58:27Z"
+		},
+		{
+			"checksumSHA1": "Bn333k9lTndxU3D6n/G5c+GMcYY=",
+			"path": "github.com/stretchr/testify/assert",
+			"revision": "c5d7a69bf8a2c9c374798160849c071093e41dd1",
+			"revisionTime": "2016-04-18T22:58:27Z"
+		},
+		{
+			"checksumSHA1": "DqY7e5PnlTQtWng87CbMmmvDHxI=",
+			"path": "github.com/stretchr/testify/mock",
+			"revision": "c5d7a69bf8a2c9c374798160849c071093e41dd1",
+			"revisionTime": "2016-04-18T22:58:27Z"
+		},
+		{
+			"checksumSHA1": "P9FJpir2c4G5PA46qEkaWy3l60U=",
+			"path": "github.com/stretchr/testify/require",
+			"revision": "c5d7a69bf8a2c9c374798160849c071093e41dd1",
+			"revisionTime": "2016-04-18T22:58:27Z"
+		},
+		{
+			"checksumSHA1": "gPvketsZyZOfoepmy6YAU5hyDWs=",
+			"path": "github.com/stretchr/testify/suite",
+			"revision": "c5d7a69bf8a2c9c374798160849c071093e41dd1",
+			"revisionTime": "2016-04-18T22:58:27Z"
 		}
 	],
 	"rootPath": "github.com/andrewslotin/slack-deploy-command"
