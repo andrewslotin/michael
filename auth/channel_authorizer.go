@@ -4,6 +4,8 @@ import (
 	"log"
 	"net/http"
 	"time"
+
+	"github.com/andrewslotin/slack-deploy-command/dashboard"
 )
 
 type ChannelAuthorizer struct {
@@ -21,10 +23,8 @@ func ChannelAuthorizerMiddleware(h http.Handler, jwtSecret []byte) *ChannelAutho
 }
 
 func (h *ChannelAuthorizer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	var channelID string
-	if len(r.URL.Path) > 1 {
-		channelID = r.URL.Path[1:]
-	} else {
+	channelID := dashboard.ChannelIDFromRequest(r)
+	if channelID == "" {
 		http.Error(w, http.StatusText(http.StatusNotFound), http.StatusNotFound)
 		return
 	}
