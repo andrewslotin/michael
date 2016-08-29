@@ -49,3 +49,18 @@ func (h *Dashboard) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/plain")
 	dashboardTemplate.Execute(w, h.repo.All(channelID))
 }
+
+// ChannelIDFromRequest extracts and returns channelID from request URL.
+func ChannelIDFromRequest(r *http.Request) string {
+	path := strings.TrimPrefix(r.URL.Path, "/")
+	if path == "" {
+		return ""
+	}
+
+	n := strings.IndexByte(path, '/')
+	if n < 0 {
+		return path
+	}
+
+	return path[:n]
+}

@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/andrewslotin/slack-deploy-command/dashboard"
 	jwt "github.com/dgrijalva/jwt-go"
 )
 
@@ -26,11 +27,7 @@ func TokenAuthenticationMiddleware(h http.Handler, authenticator TokenAuthentica
 }
 
 func (h *ChannelAuthenticator) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	var channelID string
-	if len(r.URL.Path) > 1 {
-		channelID = r.URL.Path[1:]
-	}
-
+	channelID := dashboard.ChannelIDFromRequest(r)
 	if channelID == "" {
 		h.handler.ServeHTTP(w, r)
 		return
