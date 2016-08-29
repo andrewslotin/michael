@@ -16,9 +16,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-/*
-	Test objects
-*/
+/*      Test objects      */
 type repoMock struct {
 	mock.Mock
 }
@@ -27,10 +25,7 @@ func (m repoMock) All(key string) []deploy.Deploy {
 	return m.Called(key).Get(0).([]deploy.Deploy)
 }
 
-/*
-	Tests
-*/
-
+/*          Tests         */
 func TestDashboard_OneDeploy(t *testing.T) {
 	url, mux, teardown := setup()
 	defer teardown()
@@ -146,6 +141,27 @@ func TestDashboard_MissingChannelID(t *testing.T) {
 	response.Body.Close()
 
 	assert.Equal(t, http.StatusNotFound, response.StatusCode)
+}
+
+func TestChannelIDFromRequest(t *testing.T) {
+	examples := map[string]string{
+		"/channel1":                      "channel1",
+		"/channel2?key=val":              "channel2",
+		"/channel3/hello":                "channel3",
+		"/channel4/hello/world/":         "channel4",
+		"/channel5/hello/world/?key=val": "channel5",
+		"/":         "",
+		"/?key=val": "",
+	}
+
+	for path, expectedID := range examples {
+		req, err := http.NewRequest("GET", path, nil)
+		if !assert.NoError(t, err) {
+			continue
+		}
+
+		assert.Equal(t, expectedID, dashboard.ChannelIDFromRequest(req))
+	}
 }
 
 func setup() (url string, mux *http.ServeMux, teardownFn func()) {
