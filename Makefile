@@ -1,4 +1,4 @@
-PROJECT := slack-deploy-command
+PROJECT := michael
 SOURCES := $(shell find . -name '*.go')
 
 VERSION := 1.1.4
@@ -19,9 +19,9 @@ PACKAGES := $$(go list ./... | grep -v /vendor/ | grep -v /cmd/)
 test:
 	go test $(PACKAGES)
 
-build: slack-deploy-command
+build: $(PROJECT)
 
-slack-deploy-command: $(SOURCES)
+$(PROJECT): $(SOURCES)
 	GOGC=off GOOS=$(OS) GOARCH=$(ARCH) go build -ldflags "$(LDFLAGS)" -o $(PROJECT)
 
 compress:
@@ -42,4 +42,4 @@ container: all
 clean:
 	go clean
 
-.PHONY: test build slack-deploy-command compress all container clean
+.PHONY: test build michael compress all container clean
