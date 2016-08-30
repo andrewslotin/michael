@@ -4,7 +4,7 @@ import (
 	"log"
 	"strings"
 
-	"github.com/andrewslotin/slack-deploy-command/slack"
+	"github.com/andrewslotin/michael/slack"
 )
 
 const (

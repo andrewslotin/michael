@@ -5,7 +5,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/andrewslotin/slack-deploy-command/github"
+	"github.com/andrewslotin/michael/github"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )

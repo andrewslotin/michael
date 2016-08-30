@@ -7,10 +7,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/andrewslotin/slack-deploy-command/bot"
-	"github.com/andrewslotin/slack-deploy-command/deploy"
-	"github.com/andrewslotin/slack-deploy-command/github"
-	"github.com/andrewslotin/slack-deploy-command/slack"
+	"github.com/andrewslotin/michael/bot"
+	"github.com/andrewslotin/michael/deploy"
+	"github.com/andrewslotin/michael/github"
+	"github.com/andrewslotin/michael/slack"
 	"github.com/stretchr/testify/assert"
 )
 
