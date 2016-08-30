@@ -3,7 +3,7 @@ package deploy_test
 import (
 	"testing"
 
-	"github.com/andrewslotin/slack-deploy-command/deploy"
+	"github.com/andrewslotin/michael/deploy"
 	"github.com/stretchr/testify/suite"
 )
 

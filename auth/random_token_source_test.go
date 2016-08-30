@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/andrewslotin/slack-deploy-command/auth"
+	"github.com/andrewslotin/michael/auth"
 	"github.com/stretchr/testify/assert"
 )
 

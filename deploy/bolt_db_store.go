@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/andrewslotin/slack-deploy-command/slack"
+	"github.com/andrewslotin/michael/slack"
 	"github.com/boltdb/bolt"
 )
 

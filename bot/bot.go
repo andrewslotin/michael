@@ -7,10 +7,10 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/andrewslotin/slack-deploy-command/auth"
-	"github.com/andrewslotin/slack-deploy-command/deploy"
-	"github.com/andrewslotin/slack-deploy-command/github"
-	"github.com/andrewslotin/slack-deploy-command/slack"
+	"github.com/andrewslotin/michael/auth"
+	"github.com/andrewslotin/michael/deploy"
+	"github.com/andrewslotin/michael/github"
+	"github.com/andrewslotin/michael/slack"
 )
 
 type DeployEventHandler interface {

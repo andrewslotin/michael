@@ -3,8 +3,8 @@ package auth_test
 import (
 	"testing"
 
-	"github.com/andrewslotin/slack-deploy-command/auth"
-	"github.com/andrewslotin/slack-deploy-command/auth/authtest"
+	"github.com/andrewslotin/michael/auth"
+	"github.com/andrewslotin/michael/auth/authtest"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )

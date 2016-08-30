@@ -8,9 +8,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/andrewslotin/slack-deploy-command/dashboard"
-	"github.com/andrewslotin/slack-deploy-command/deploy"
-	"github.com/andrewslotin/slack-deploy-command/slack"
+	"github.com/andrewslotin/michael/dashboard"
+	"github.com/andrewslotin/michael/deploy"
+	"github.com/andrewslotin/michael/slack"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"

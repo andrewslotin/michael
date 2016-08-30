@@ -11,12 +11,12 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/andrewslotin/slack-deploy-command/auth"
-	"github.com/andrewslotin/slack-deploy-command/bot"
-	"github.com/andrewslotin/slack-deploy-command/dashboard"
-	"github.com/andrewslotin/slack-deploy-command/deploy"
-	"github.com/andrewslotin/slack-deploy-command/server"
-	"github.com/andrewslotin/slack-deploy-command/slack"
+	"github.com/andrewslotin/michael/auth"
+	"github.com/andrewslotin/michael/bot"
+	"github.com/andrewslotin/michael/dashboard"
+	"github.com/andrewslotin/michael/deploy"
+	"github.com/andrewslotin/michael/server"
+	"github.com/andrewslotin/michael/slack"
 )
 
 const (
@@ -52,7 +52,7 @@ func init() {
 func printVersion() {
 	fmt.Printf("%s v%s (rev %s)\n", binPath, version, buildRev)
 	fmt.Printf("Built with %s on %s by %s\n\n", buildGoVersion, buildDate, builder)
-	fmt.Println("Found a bug? Got an idea? Open an issue on https://github.com/andrewslotin/slack-deploy-command\nContributions are welcome!")
+	fmt.Println("Found a bug? Got an idea? Open an issue on https://github.com/andrewslotin/michael\nContributions are welcome!")
 	os.Exit(0)
 }
 
@@ -125,7 +125,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	log.Printf("slack-deploy-command server v%s is up and running at %s", version, srv.Addr)
+	log.Printf("Michael Buffer v%s is listening on %s", version, srv.Addr)
 
 	signals := make(chan os.Signal)
 	signal.Notify(signals, os.Interrupt, syscall.SIGTERM)

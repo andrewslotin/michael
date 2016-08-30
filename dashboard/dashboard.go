@@ -6,7 +6,7 @@ import (
 	"text/template"
 	"time"
 
-	"github.com/andrewslotin/slack-deploy-command/deploy"
+	"github.com/andrewslotin/michael/deploy"
 )
 
 var dashboardTemplate = template.Must(

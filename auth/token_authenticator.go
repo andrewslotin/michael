@@ -4,7 +4,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/andrewslotin/slack-deploy-command/dashboard"
+	"github.com/andrewslotin/michael/dashboard"
 	jwt "github.com/dgrijalva/jwt-go"
 )
 
