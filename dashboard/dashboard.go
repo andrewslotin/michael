@@ -3,31 +3,10 @@ package dashboard
 import (
 	"net/http"
 	"strings"
-	"text/template"
-	"time"
 
+	"github.com/andrewslotin/michael/dashboard/formatters"
 	"github.com/andrewslotin/michael/deploy"
 )
-
-var dashboardTemplate = template.Must(
-	template.New("dashboard").
-		Funcs(template.FuncMap{
-			"ftime": func(t time.Time) string { return t.Format(time.RFC822) },
-		}).
-		Parse(strings.TrimSpace(`
-Deploy history
---------------
-
-{{ range . -}}
-{{ if not .FinishedAt.IsZero -}}
-  * {{ .User.Name }} was deploying {{ .Subject }} since {{ .StartedAt | ftime }} until {{ .FinishedAt | ftime }}
-{{ else -}}
-  * {{ .User.Name }} is currently deploying {{ .Subject }} since {{ .StartedAt | ftime }}
-{{ end -}}
-{{ else -}}
-  No deploys in channel so far
-{{ end }}
-`)))
 
 type Dashboard struct {
 	repo deploy.Repository
@@ -46,8 +25,9 @@ func (h *Dashboard) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.Header().Set("Content-Type", "text/plain")
-	dashboardTemplate.Execute(w, h.repo.All(channelID))
+	if err := Responder(r).RespondWithHistory(w, h.repo.All(channelID)); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
 }
 
 // ChannelIDFromRequest extracts and returns channelID from request URL.
@@ -63,4 +43,16 @@ func ChannelIDFromRequest(r *http.Request) string {
 	}
 
 	return path[:n]
+}
+
+// Responder returns a formatters.ResponseFormatter according to the extension in URL path.
+func Responder(r *http.Request) formatters.ResponseFormatter {
+	switch {
+	case strings.HasSuffix(r.URL.Path, ".json"):
+		return formatters.JSON
+	case strings.HasSuffix(r.URL.Path, ".txt"):
+		return formatters.PlainText
+	default:
+		return formatters.PlainText
+	}
 }
