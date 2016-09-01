@@ -37,12 +37,13 @@ func ChannelIDFromRequest(r *http.Request) string {
 		return ""
 	}
 
-	n := strings.IndexByte(path, '/')
-	if n < 0 {
-		return path
+	if n := strings.IndexByte(path, '/'); n >= 0 {
+		return path[:n]
+	} else if n := strings.LastIndexByte(path, '.'); n >= 0 {
+		return path[:n]
 	}
 
-	return path[:n]
+	return path
 }
 
 // Responder returns a formatters.ResponseFormatter according to the extension in URL path.
