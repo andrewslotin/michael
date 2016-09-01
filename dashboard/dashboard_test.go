@@ -145,13 +145,16 @@ func TestDashboard_MissingChannelID(t *testing.T) {
 
 func TestChannelIDFromRequest(t *testing.T) {
 	examples := map[string]string{
-		"/channel1":                      "channel1",
-		"/channel2?key=val":              "channel2",
-		"/channel3/hello":                "channel3",
-		"/channel4/hello/world/":         "channel4",
-		"/channel5/hello/world/?key=val": "channel5",
-		"/":         "",
-		"/?key=val": "",
+		"/channel1":                        "channel1",
+		"/channel2?key=val":                "channel2",
+		"/channel3/hello":                  "channel3",
+		"/channel4/hello/world/":           "channel4",
+		"/channel5/hello/world/?key=val":   "channel5",
+		"/channel6/notchannel.txt":         "channel6",
+		"/channel7/notchannel.txt?key=val": "channel7",
+		"/channel8.txt":                    "channel8",
+		"/":                                "",
+		"/?key=val":                        "",
 	}
 
 	for path, expectedID := range examples {
