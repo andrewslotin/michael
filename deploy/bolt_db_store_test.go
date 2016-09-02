@@ -4,11 +4,8 @@ import (
 	"io/ioutil"
 	"os"
 	"testing"
-	"time"
 
 	"github.com/andrewslotin/michael/deploy"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 )
 
@@ -46,51 +43,6 @@ func TestBoltDBStore_AsRepository(t *testing.T) {
 
 		return r, r.Set, teardownFn, nil
 	}})
-}
-
-func TestBoltDBStore_Since(t *testing.T) {
-	path, err := tempDBFilePath()
-	require.NoError(t, err)
-
-	defer func() { os.Remove(path) }()
-
-	store, err := deploy.NewBoltDBStore(path)
-	require.NoError(t, err)
-
-	history := []deploy.Deploy{
-		deploy.Deploy{
-			StartedAt:  time.Now().Add(-60 * time.Minute),
-			FinishedAt: time.Now().Add(-55 * time.Minute),
-		},
-		deploy.Deploy{
-			StartedAt:  time.Now().Add(-40 * time.Minute),
-			FinishedAt: time.Now().Add(-35 * time.Minute),
-		},
-		deploy.Deploy{
-			StartedAt:  time.Now().Add(-20 * time.Minute),
-			FinishedAt: time.Now().Add(-15 * time.Minute),
-		},
-		deploy.Deploy{
-			StartedAt: time.Now(),
-		},
-	}
-
-	for _, d := range history {
-		store.Set("key1", d)
-	}
-
-	t.Run("Multiple", func(t *testing.T) {
-		deploys := store.Since("key1", time.Now().Add(-58*time.Minute))
-		assert.Len(t, deploys, 3)
-	})
-	t.Run("Missing key", func(t *testing.T) {
-		deploys := store.Since("key2", time.Now().Add(-58*time.Minute))
-		assert.Len(t, deploys, 0)
-	})
-	t.Run("No deploys since", func(t *testing.T) {
-		deploys := store.Since("key1", time.Now().Add(time.Minute))
-		assert.Len(t, deploys, 0)
-	})
 }
 
 func tempDBFilePath() (string, error) {

@@ -25,6 +25,10 @@ func (m repoMock) All(key string) []deploy.Deploy {
 	return m.Called(key).Get(0).([]deploy.Deploy)
 }
 
+func (m repoMock) Since(key string, t time.Time) []deploy.Deploy {
+	return m.Called(key, t).Get(0).([]deploy.Deploy)
+}
+
 /*          Tests         */
 func TestDashboard_OneDeploy(t *testing.T) {
 	url, mux, teardown := setup()
