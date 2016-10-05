@@ -61,6 +61,8 @@ func TestDashboard_OneDeploy(t *testing.T) {
 		"* Test User was deploying Test deploy since 04 Aug 16 09:28 CEST until 04 Aug 16 09:38 CEST"
 
 	assert.Equal(t, expected, string(bytes.TrimSpace(body)))
+
+	repo.AssertExpectations(t)
 }
 
 func TestDashboard_MultipleDeploys(t *testing.T) {
@@ -102,6 +104,8 @@ func TestDashboard_MultipleDeploys(t *testing.T) {
 		"* Another User is currently deploying Third deploy since 04 Aug 16 09:50 CEST"
 
 	assert.Equal(t, expected, string(bytes.TrimSpace(body)))
+
+	repo.AssertExpectations(t)
 }
 
 func TestDashboard_NoDeploys(t *testing.T) {
@@ -130,6 +134,8 @@ func TestDashboard_NoDeploys(t *testing.T) {
 		"No deploys in channel so far"
 
 	assert.Equal(t, expected, string(bytes.TrimSpace(body)))
+
+	repo.AssertExpectations(t)
 }
 
 func TestDashboard_DeploysSince(t *testing.T) {
