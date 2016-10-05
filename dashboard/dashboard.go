@@ -1,8 +1,10 @@
 package dashboard
 
 import (
+	"errors"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/andrewslotin/michael/dashboard/formatters"
 	"github.com/andrewslotin/michael/deploy"
@@ -25,7 +27,23 @@ func (h *Dashboard) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := Responder(r).RespondWithHistory(w, h.repo.All(channelID)); err != nil {
+	var history []deploy.Deploy
+	if v := r.FormValue("since"); v != "" {
+		timeSince, err := time.Parse(time.RFC3339, v)
+		if err != nil {
+			if err = Responder(r).RespondWithError(w, errors.New("Malformed time in `since` parameter"), http.StatusBadRequest); err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+			}
+
+			return
+		}
+
+		history = h.repo.Since(channelID, timeSince)
+	} else {
+		history = h.repo.All(channelID)
+	}
+
+	if err := Responder(r).RespondWithHistory(w, history); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 }
