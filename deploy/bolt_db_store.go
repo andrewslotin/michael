@@ -110,8 +110,41 @@ func (s *BoltDBStore) All(key string) []Deploy {
 	return deploys
 }
 
-func (*BoltDBStore) deployKey(deploy Deploy) []byte {
-	return []byte(deploy.StartedAt.UTC().Format(time.RFC3339) + "-" + deploy.User.ID)
+func (s *BoltDBStore) Since(key string, startTime time.Time) []Deploy {
+	var deploys []Deploy
+
+	s.db.View(func(tx *bolt.Tx) error {
+		b := tx.Bucket([]byte(key))
+		if b == nil {
+			return nil
+		}
+
+		cur := b.Cursor()
+		for k, v := cur.Seek([]byte(s.deployKeyTimestamp(startTime) + "-")); k != nil; k, v = cur.Next() {
+			if v != nil {
+				continue
+			}
+
+			d, err := s.readDeploy(k, b)
+			if err != nil {
+				return err
+			}
+
+			deploys = append(deploys, d)
+		}
+
+		return nil
+	})
+
+	return deploys
+}
+
+func (s *BoltDBStore) deployKey(deploy Deploy) []byte {
+	return []byte(s.deployKeyTimestamp(deploy.StartedAt) + "-" + deploy.User.ID)
+}
+
+func (*BoltDBStore) deployKeyTimestamp(t time.Time) string {
+	return t.UTC().Format(time.RFC3339)
 }
 
 func (s *BoltDBStore) writeDeploy(deploy Deploy, channelBucket *bolt.Bucket) error {
