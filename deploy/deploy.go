@@ -33,3 +33,10 @@ func (d *Deploy) Finish() {
 
 	d.FinishedAt = time.Now().UTC()
 }
+
+func (d1 Deploy) Equal(d2 Deploy) bool {
+	return d1.User == d2.User &&
+		d1.Subject == d2.Subject &&
+		d1.StartedAt.Equal(d2.StartedAt) &&
+		d1.FinishedAt.Equal(d2.FinishedAt)
+}

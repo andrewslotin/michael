@@ -42,10 +42,7 @@ func (suite *RepositorySuite) TestAll() {
 	allDeploys := repo.All(key)
 	if assert.Len(suite.T(), allDeploys, len(deploys)) {
 		for i, d := range allDeploys {
-			assert.Equal(suite.T(), deploys[i].User, d.User)
-			assert.Equal(suite.T(), deploys[i].Subject, d.Subject)
-			assert.True(suite.T(), deploys[i].StartedAt.Equal(d.StartedAt), "expected %s, got %s", deploys[i].StartedAt, d.StartedAt)
-			assert.True(suite.T(), deploys[i].FinishedAt.Equal(d.FinishedAt), "expected %s, got %s", deploys[i].FinishedAt, d.FinishedAt)
+			assert.True(suite.T(), d.Equal(deploys[i]), "expected %+v, got %+v", d, deploys[i])
 		}
 	}
 }
