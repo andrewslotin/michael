@@ -42,10 +42,74 @@ func (suite *RepositorySuite) TestAll() {
 	allDeploys := repo.All(key)
 	if assert.Len(suite.T(), allDeploys, len(deploys)) {
 		for i, d := range allDeploys {
-			assert.Equal(suite.T(), deploys[i].User, d.User)
-			assert.Equal(suite.T(), deploys[i].Subject, d.Subject)
-			assert.True(suite.T(), deploys[i].StartedAt.Equal(d.StartedAt), "expected %s, got %s", deploys[i].StartedAt, d.StartedAt)
-			assert.True(suite.T(), deploys[i].FinishedAt.Equal(d.FinishedAt), "expected %s, got %s", deploys[i].FinishedAt, d.FinishedAt)
+			assert.True(suite.T(), d.Equal(deploys[i]), "expected %+v, got %+v", d, deploys[i])
 		}
 	}
+}
+
+func (suite *RepositorySuite) TestSince_Multiple() {
+	repo, storeSet, teardown, err := suite.Setup()
+	if teardown != nil {
+		defer teardown()
+	}
+	require.NoError(suite.T(), err)
+
+	history := []deploy.Deploy{
+		deploy.Deploy{
+			StartedAt:  time.Now().Add(-60 * time.Minute),
+			FinishedAt: time.Now().Add(-55 * time.Minute),
+		},
+		deploy.Deploy{
+			StartedAt:  time.Now().Add(-40 * time.Minute),
+			FinishedAt: time.Now().Add(-35 * time.Minute),
+		},
+		deploy.Deploy{
+			StartedAt:  time.Now().Add(-20 * time.Minute),
+			FinishedAt: time.Now().Add(-15 * time.Minute),
+		},
+		deploy.Deploy{
+			StartedAt: time.Now(),
+		},
+	}
+
+	for _, d := range history {
+		storeSet("key1", d)
+	}
+
+	deploys := repo.Since("key1", time.Now().Add(-58*time.Minute))
+	assert.Len(suite.T(), deploys, 3)
+	assert.True(suite.T(), history[1].Equal(deploys[0]))
+	assert.True(suite.T(), history[2].Equal(deploys[1]))
+	assert.True(suite.T(), history[3].Equal(deploys[2]))
+}
+
+func (suite *RepositorySuite) TestSince_EmptyHistory() {
+	repo, storeSet, teardown, err := suite.Setup()
+	if teardown != nil {
+		defer teardown()
+	}
+	require.NoError(suite.T(), err)
+
+	storeSet("key1", deploy.Deploy{
+		StartedAt: time.Now(),
+	})
+
+	deploys := repo.Since("key2", time.Now().Add(-10*time.Minute))
+	assert.Len(suite.T(), deploys, 0)
+}
+
+func (suite *RepositorySuite) TestSince_NoMatchingDeploys() {
+	repo, storeSet, teardown, err := suite.Setup()
+	if teardown != nil {
+		defer teardown()
+	}
+	require.NoError(suite.T(), err)
+
+	storeSet("key1", deploy.Deploy{
+		StartedAt:  time.Now().Add(-20 * time.Minute),
+		FinishedAt: time.Now().Add(-15 * time.Minute),
+	})
+
+	deploys := repo.Since("key1", time.Now().Add(-17*time.Minute))
+	assert.Len(suite.T(), deploys, 0)
 }

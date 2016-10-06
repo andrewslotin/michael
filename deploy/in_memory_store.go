@@ -1,6 +1,9 @@
 package deploy
 
-import "sync"
+import (
+	"sync"
+	"time"
+)
 
 type InMemoryStore struct {
 	mu sync.RWMutex
@@ -43,4 +46,26 @@ func (s *InMemoryStore) All(key string) []Deploy {
 	s.mu.RUnlock()
 
 	return deploys
+}
+
+func (s *InMemoryStore) Since(key string, startTime time.Time) []Deploy {
+	s.mu.RLock()
+	history, ok := s.m[key]
+	if !ok {
+		return nil
+	}
+	s.mu.RUnlock()
+
+	i := len(history)
+	for ; i > 0; i-- {
+		if history[i-1].StartedAt.Before(startTime) {
+			break
+		}
+	}
+
+	if i == len(history) {
+		return nil
+	}
+
+	return history[i:]
 }
