@@ -3,7 +3,7 @@
 Michael
 =======
 
-[![Build Status](https://travis-ci.org/andrewslotin/michael.png)](https://travis-ci.org/andrewslotin/michael)
+[![Build Status](https://travis-ci.org/andrewslotin/michael.svg?branch=master)](https://travis-ci.org/andrewslotin/michael)
 
 Announce deploys in Slack channels.
 
