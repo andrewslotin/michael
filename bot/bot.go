@@ -70,6 +70,7 @@ func (b *Bot) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		Name: r.PostFormValue("user_name"),
 	}
 
+	// TODO: make commands case-insensitive
 	switch subject := r.PostFormValue("text"); subject {
 	case "", "help":
 		sendImmediateResponse(w, b.responses.HelpMessage())
@@ -114,7 +115,7 @@ func (b *Bot) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 		w.Write(nil)
 
-		go sendDelayedResponse(w, r, b.responses.DeployAnnouncement(user, subject))
+		go sendDelayedResponse(w, r, b.responses.DeployAnnouncement(d))
 		for _, h := range b.deployEventHandlers {
 			go h.DeployStarted(channelID)
 		}
