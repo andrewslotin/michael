@@ -200,6 +200,51 @@ func TestWebAPI_ChannelsGetTopic_ErrorHandling(t *testing.T) {
 	assert.Error(t, err)
 }
 
+func TestWebAPI_ListUsers(t *testing.T) {
+	mux, baseURL, teardown := setup()
+	defer teardown()
+
+	var requestNum int
+	mux.HandleFunc("/users.list", func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, "xxxx-token-12345", r.FormValue("token"))
+
+		requestNum++
+		w.Write([]byte(`{"ok":true,"members":[{"id":"U1","name":"user1"},{"id":"U2","name":"user2"}]}`))
+	})
+
+	api := slack.NewWebAPI("xxxx-token-12345", nil)
+	api.BaseURL = baseURL
+
+	users, err := api.ListUsers()
+	require.NoError(t, err)
+	require.Equal(t, 1, requestNum)
+
+	if assert.Len(t, users, 2) {
+		assert.Contains(t, users, slack.User{ID: "U1", Name: "user1"})
+		assert.Contains(t, users, slack.User{ID: "U2", Name: "user2"})
+	}
+}
+
+func TestWebAPI_ListUsers_ErrorHandling(t *testing.T) {
+	mux, baseURL, teardown := setup()
+	defer teardown()
+
+	var requestNum int
+	mux.HandleFunc("/users.list", func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, "xxxx-token-12345", r.FormValue("token"))
+
+		requestNum++
+		w.Write([]byte(`{"ok":false,"error":"no users"`))
+	})
+
+	api := slack.NewWebAPI("xxxx-token-12345", nil)
+	api.BaseURL = baseURL
+
+	_, err := api.ListUsers()
+	require.Equal(t, 1, requestNum)
+	assert.Error(t, err)
+}
+
 func setup() (mux *http.ServeMux, baseURL string, teardownFn func()) {
 	mux = http.NewServeMux()
 	ts := httptest.NewServer(mux)

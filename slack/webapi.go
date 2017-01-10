@@ -76,6 +76,24 @@ func (api *WebAPI) GetChannelTopic(channelID string) (string, error) {
 	return v.Channel.Topic.Value, nil
 }
 
+func (api *WebAPI) ListUsers() ([]User, error) {
+	const method = "users.list"
+
+	resp, requestURL, err := api.Call(method, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	var v struct {
+		Members []User `json:"members"`
+	}
+	if err := json.Unmarshal(resp, &v); err != nil {
+		return nil, wrapError(fmt.Errorf("failed to decode response body %q (%s)", resp, err), method, requestURL)
+	}
+
+	return v.Members, nil
+}
+
 func (api *WebAPI) Call(method string, params url.Values) (response []byte, u *url.URL, err error) {
 	req, err := http.NewRequest("GET", api.BaseURL+"/"+method, nil)
 	if err != nil {
