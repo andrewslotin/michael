@@ -7,27 +7,28 @@ import (
 )
 
 var (
-	referenceRegexes = []*regexp.Regexp{
+	// TODO: support anchors in GitHub URLs along with query string parameters
+	pullRequestReferenceRegexes = []*regexp.Regexp{
 		regexp.MustCompile("^(?P<repository>\\S+/\\S+)#(?P<number>\\d+)[^A-Za-z]?$"),                        // octocat/helloworld#12
 		regexp.MustCompile("^https?://github.com/(?P<repository>\\S+/\\S+)/pull/(?P<number>\\d+)(?:\\?|$)"), // https://github.com/octocat/helloworld/pull/12
 	}
 )
 
-type Reference struct {
+type PullRequestReference struct {
 	ID         string
 	Repository string
 }
 
-func FindReferences(s string) []Reference {
+func FindPullRequestReferences(s string) []PullRequestReference {
 	scanner := bufio.NewScanner(strings.NewReader(s))
 	scanner.Split(bufio.ScanWords)
 
-	var refs []Reference
+	var refs []PullRequestReference
 	for scanner.Scan() {
 		word := scanner.Text()
 
-		for _, re := range referenceRegexes {
-			if ref, ok := extractReference(word, re); ok {
+		for _, re := range pullRequestReferenceRegexes {
+			if ref, ok := extractPullRequestReference(word, re); ok {
 				refs = append(refs, ref)
 			}
 		}
@@ -36,7 +37,7 @@ func FindReferences(s string) []Reference {
 	return refs
 }
 
-func extractReference(s string, re *regexp.Regexp) (ref Reference, ok bool) {
+func extractPullRequestReference(s string, re *regexp.Regexp) (ref PullRequestReference, ok bool) {
 	m := re.FindStringSubmatch(s)
 	if m == nil {
 		return ref, false
