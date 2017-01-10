@@ -12,7 +12,7 @@ import (
 func TestNewDeploy(t *testing.T) {
 	var (
 		user    = slack.User{ID: "1", Name: "Test User"}
-		subject = "Test deploy https://github.com/a/b/pull/123 and x/y#4"
+		subject = "Test deploy https://github.com/a/b/pull/123 and x/y#4 for @user1"
 	)
 
 	d := deploy.New(user, subject)
@@ -24,6 +24,10 @@ func TestNewDeploy(t *testing.T) {
 	if assert.Len(t, d.PullRequests, 2) {
 		assert.Contains(t, d.PullRequests, deploy.PullRequestReference{ID: "123", Repository: "a/b"})
 		assert.Contains(t, d.PullRequests, deploy.PullRequestReference{ID: "4", Repository: "x/y"})
+	}
+
+	if assert.Len(t, d.InterestedUsers, 1) {
+		assert.Contains(t, d.InterestedUsers, deploy.UserReference{Name: "user1"})
 	}
 }
 
