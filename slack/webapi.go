@@ -118,6 +118,29 @@ func (api *WebAPI) PostMessage(channelID string, message Message) error {
 	return nil
 }
 
+func (api *WebAPI) OpenIMChannel(user User) (string, error) {
+	const method = "im.open"
+
+	params := url.Values{}
+	params.Set("user", user.ID)
+
+	resp, requestURL, err := api.Call(method, params)
+	if err != nil {
+		return "", fmt.Errorf("failed to open an IM message with %s: %s", user, err)
+	}
+
+	var v struct {
+		Channel struct {
+			ID string `json:"id"`
+		} `json:"channel"`
+	}
+	if err := json.Unmarshal(resp, &v); err != nil {
+		return "", wrapError(fmt.Errorf("failed to decode response body %q (%s)", resp, err), method, requestURL)
+	}
+
+	return v.Channel.ID, nil
+}
+
 func (api *WebAPI) Call(method string, params url.Values) (response []byte, u *url.URL, err error) {
 	req, err := http.NewRequest("GET", api.BaseURL+"/"+method, nil)
 	if err != nil {
