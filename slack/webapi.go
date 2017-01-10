@@ -94,6 +94,30 @@ func (api *WebAPI) ListUsers() ([]User, error) {
 	return v.Members, nil
 }
 
+func (api *WebAPI) PostMessage(channelID string, message Message) error {
+	const method = "chat.postMessage"
+
+	params := url.Values{}
+	params.Set("channel", channelID)
+	params.Set("text", message.Text)
+
+	if len(message.Attachments) > 0 {
+		attachments, err := json.Marshal(message.Attachments)
+		if err != nil {
+			return fmt.Errorf("failed to encode attachments for message %s: %s", message.Text, err)
+		}
+
+		params.Set("attachments", string(attachments))
+	}
+
+	_, requestURL, err := api.Call(method, params)
+	if err != nil {
+		return wrapError(fmt.Errorf("failed to post message %v to channel %s: %s", message, channelID, err), method, requestURL)
+	}
+
+	return nil
+}
+
 func (api *WebAPI) Call(method string, params url.Values) (response []byte, u *url.URL, err error) {
 	req, err := http.NewRequest("GET", api.BaseURL+"/"+method, nil)
 	if err != nil {

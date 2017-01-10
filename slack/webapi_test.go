@@ -1,6 +1,7 @@
 package slack_test
 
 import (
+	"encoding/json"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -243,6 +244,64 @@ func TestWebAPI_ListUsers_ErrorHandling(t *testing.T) {
 	_, err := api.ListUsers()
 	require.Equal(t, 1, requestNum)
 	assert.Error(t, err)
+}
+
+func TestWebAPI_PostMessage_WithoutAttachments(t *testing.T) {
+	mux, baseURL, teardown := setup()
+	defer teardown()
+
+	message := slack.Message{Text: "Test message"}
+
+	var requestNum int
+	mux.HandleFunc("/chat.postMessage", func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, "xxxx-token-12345", r.FormValue("token"))
+		assert.Equal(t, "channel1", r.FormValue("channel"))
+		assert.Equal(t, message.Text, r.FormValue("text"))
+
+		requestNum++
+		w.Write([]byte(`{"ok":true}`))
+	})
+
+	api := slack.NewWebAPI("xxxx-token-12345", nil)
+	api.BaseURL = baseURL
+
+	require.NoError(t, api.PostMessage("channel1", message))
+	assert.Equal(t, 1, requestNum)
+}
+
+func TestWebAPI_PostMessage_WithAttachments(t *testing.T) {
+	mux, baseURL, teardown := setup()
+	defer teardown()
+
+	message := slack.Message{
+		Text: "Test message",
+		Attachments: []slack.Attachment{
+			{Text: "attachment 1"},
+			{Text: "attachment 2", Markdown: true},
+		},
+	}
+
+	var requestNum int
+	mux.HandleFunc("/chat.postMessage", func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, "xxxx-token-12345", r.FormValue("token"))
+		assert.Equal(t, "channel1", r.FormValue("channel"))
+		assert.Equal(t, message.Text, r.FormValue("text"))
+
+		if encodedAttachments := r.FormValue("attachments"); assert.NotEmpty(t, encodedAttachments) {
+			var attachments []slack.Attachment
+			require.NoError(t, json.Unmarshal([]byte(encodedAttachments), &attachments))
+			assert.Equal(t, message.Attachments, attachments)
+		}
+
+		requestNum++
+		w.Write([]byte(`{"ok":true}`))
+	})
+
+	api := slack.NewWebAPI("xxxx-token-12345", nil)
+	api.BaseURL = baseURL
+
+	require.NoError(t, api.PostMessage("channel1", message))
+	assert.Equal(t, 1, requestNum)
 }
 
 func setup() (mux *http.ServeMux, baseURL string, teardownFn func()) {
