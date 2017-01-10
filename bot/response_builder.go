@@ -64,7 +64,7 @@ func (b *ResponseBuilder) DeployInterruptedAnnouncement(d deploy.Deploy, user sl
 func (b *ResponseBuilder) DeployAnnouncement(d deploy.Deploy) *slack.Response {
 	responseText := fmt.Sprintf(deployAnnouncementMessage, d.User, slack.EscapeMessage(d.Subject))
 	response := newAnnouncement(responseText)
-	for _, ref := range deploy.FindPullRequestReferences(d.Subject) {
+	for _, ref := range d.PullRequests {
 		pr, err := b.githubClient.GetPullRequest(ref.Repository, ref.ID)
 		if err != nil {
 			response.Attachments = append(response.Attachments, slack.Attachment{

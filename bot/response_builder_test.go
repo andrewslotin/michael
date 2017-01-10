@@ -103,7 +103,7 @@ func TestResponseBuilder_DeployAnnouncement(t *testing.T) {
 
 	d := deploy.Deploy{
 		User:    slack.User{ID: "abc123", Name: "user1"},
-		Subject: "user1/repo1#123 and user2/repo2#234",
+		Subject: "new feature",
 		PullRequests: []deploy.PullRequestReference{
 			{ID: "123", Repository: "user1/repo1"},
 			{ID: "234", Repository: "user2/repo2"},
