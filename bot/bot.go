@@ -14,8 +14,8 @@ import (
 )
 
 type DeployEventHandler interface {
-	DeployStarted(channelID string)
-	DeployCompleted(channelID string)
+	DeployStarted(channelID string, d deploy.Deploy)
+	DeployCompleted(channelID string, d deploy.Deploy)
 }
 
 type Bot struct {
@@ -96,7 +96,7 @@ func (b *Bot) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		}
 
 		for _, h := range b.deployEventHandlers {
-			go h.DeployCompleted(channelID)
+			go h.DeployCompleted(channelID, d)
 		}
 	case "history":
 		dashboardToken, err := b.dashboardAuth.IssueToken(auth.DefaultTokenLength)
@@ -117,7 +117,7 @@ func (b *Bot) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 		go sendDelayedResponse(w, r, b.responses.DeployAnnouncement(d))
 		for _, h := range b.deployEventHandlers {
-			go h.DeployStarted(channelID)
+			go h.DeployStarted(channelID, d)
 		}
 	}
 }
