@@ -7,14 +7,19 @@ import (
 )
 
 type Deploy struct {
-	User       slack.User
-	Subject    string
-	StartedAt  time.Time
-	FinishedAt time.Time
+	User         slack.User
+	Subject      string
+	StartedAt    time.Time
+	FinishedAt   time.Time
+	PullRequests []PullRequestReference
 }
 
 func New(user slack.User, subject string) Deploy {
-	return Deploy{User: user, Subject: subject}
+	return Deploy{
+		User:         user,
+		Subject:      subject,
+		PullRequests: FindPullRequestReferences(subject),
+	}
 }
 
 func (d *Deploy) Start() bool {
