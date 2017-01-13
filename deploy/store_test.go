@@ -24,24 +24,30 @@ func (suite *StoreSuite) TestGetSet() {
 	assert.False(suite.T(), ok)
 
 	// Store a value
-	channel1Deploy := deploy.New(slack.User{ID: "1", Name: "Test User"}, "Deploy subject")
+	channel1Deploy := deploy.New(slack.User{ID: "1", Name: "Test User"}, "Deploy subject a/b#1 for @user")
 	channel1Deploy.Start()
 	store.Set("key1", channel1Deploy)
 	if d, ok := store.Get("key1"); assert.True(suite.T(), ok) {
 		assert.Equal(suite.T(), channel1Deploy, d)
+		assert.Equal(suite.T(), channel1Deploy.PullRequests, d.PullRequests)
+		assert.Equal(suite.T(), channel1Deploy.Subscribers, d.Subscribers)
 	}
 
 	// Populate another key
-	channel2Deploy := deploy.New(slack.User{ID: "2", Name: "Second User"}, "Another deploy")
+	channel2Deploy := deploy.New(slack.User{ID: "2", Name: "Second User"}, "Another deploy c/d#2 for @another_user")
 	channel2Deploy.Start()
 	store.Set("key2", channel2Deploy)
 	if d, ok := store.Get("key2"); assert.True(suite.T(), ok) {
 		assert.Equal(suite.T(), channel2Deploy, d)
+		assert.Equal(suite.T(), channel2Deploy.PullRequests, d.PullRequests)
+		assert.Equal(suite.T(), channel2Deploy.Subscribers, d.Subscribers)
 	}
 
 	// Check that another record wasn't changed
 	if d, ok := store.Get("key1"); assert.True(suite.T(), ok) {
 		assert.Equal(suite.T(), channel1Deploy, d)
+		assert.Equal(suite.T(), channel1Deploy.PullRequests, d.PullRequests)
+		assert.Equal(suite.T(), channel1Deploy.Subscribers, d.Subscribers)
 	}
 }
 

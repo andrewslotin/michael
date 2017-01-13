@@ -1,6 +1,7 @@
 package slack_test
 
 import (
+	"encoding/json"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -196,6 +197,157 @@ func TestWebAPI_ChannelsGetTopic_ErrorHandling(t *testing.T) {
 	api.BaseURL = baseURL
 
 	_, err := api.GetChannelTopic("CHANNELID1")
+	require.Equal(t, 1, requestNum)
+	assert.Error(t, err)
+}
+
+func TestWebAPI_ListUsers(t *testing.T) {
+	mux, baseURL, teardown := setup()
+	defer teardown()
+
+	var requestNum int
+	mux.HandleFunc("/users.list", func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, "xxxx-token-12345", r.FormValue("token"))
+
+		requestNum++
+		w.Write([]byte(`{"ok":true,"members":[{"id":"U1","name":"user1"},{"id":"U2","name":"user2"}]}`))
+	})
+
+	api := slack.NewWebAPI("xxxx-token-12345", nil)
+	api.BaseURL = baseURL
+
+	users, err := api.ListUsers()
+	require.NoError(t, err)
+	require.Equal(t, 1, requestNum)
+
+	if assert.Len(t, users, 2) {
+		assert.Contains(t, users, slack.User{ID: "U1", Name: "user1"})
+		assert.Contains(t, users, slack.User{ID: "U2", Name: "user2"})
+	}
+}
+
+func TestWebAPI_ListUsers_ErrorHandling(t *testing.T) {
+	mux, baseURL, teardown := setup()
+	defer teardown()
+
+	var requestNum int
+	mux.HandleFunc("/users.list", func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, "xxxx-token-12345", r.FormValue("token"))
+
+		requestNum++
+		w.Write([]byte(`{"ok":false,"error":"no users"`))
+	})
+
+	api := slack.NewWebAPI("xxxx-token-12345", nil)
+	api.BaseURL = baseURL
+
+	_, err := api.ListUsers()
+	require.Equal(t, 1, requestNum)
+	assert.Error(t, err)
+}
+
+func TestWebAPI_PostMessage_WithoutAttachments(t *testing.T) {
+	mux, baseURL, teardown := setup()
+	defer teardown()
+
+	message := slack.Message{Text: "Test message"}
+
+	var requestNum int
+	mux.HandleFunc("/chat.postMessage", func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, "xxxx-token-12345", r.FormValue("token"))
+		assert.Equal(t, "channel1", r.FormValue("channel"))
+		assert.Equal(t, message.Text, r.FormValue("text"))
+
+		requestNum++
+		w.Write([]byte(`{"ok":true}`))
+	})
+
+	api := slack.NewWebAPI("xxxx-token-12345", nil)
+	api.BaseURL = baseURL
+
+	require.NoError(t, api.PostMessage("channel1", message))
+	assert.Equal(t, 1, requestNum)
+}
+
+func TestWebAPI_PostMessage_WithAttachments(t *testing.T) {
+	mux, baseURL, teardown := setup()
+	defer teardown()
+
+	message := slack.Message{
+		Text: "Test message",
+		Attachments: []slack.Attachment{
+			{Text: "attachment 1"},
+			{Text: "attachment 2", Markdown: true},
+		},
+	}
+
+	var requestNum int
+	mux.HandleFunc("/chat.postMessage", func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, "xxxx-token-12345", r.FormValue("token"))
+		assert.Equal(t, "channel1", r.FormValue("channel"))
+		assert.Equal(t, message.Text, r.FormValue("text"))
+
+		if encodedAttachments := r.FormValue("attachments"); assert.NotEmpty(t, encodedAttachments) {
+			var attachments []slack.Attachment
+			require.NoError(t, json.Unmarshal([]byte(encodedAttachments), &attachments))
+			assert.Equal(t, message.Attachments, attachments)
+		}
+
+		requestNum++
+		w.Write([]byte(`{"ok":true}`))
+	})
+
+	api := slack.NewWebAPI("xxxx-token-12345", nil)
+	api.BaseURL = baseURL
+
+	require.NoError(t, api.PostMessage("channel1", message))
+	assert.Equal(t, 1, requestNum)
+}
+
+func TestWebAPI_OpenIMChannel(t *testing.T) {
+	mux, baseURL, teardown := setup()
+	defer teardown()
+
+	user := slack.User{ID: "123", Name: "user1"}
+
+	var requestNum int
+	mux.HandleFunc("/im.open", func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, "xxxx-token-12345", r.FormValue("token"))
+		assert.Equal(t, user.ID, r.FormValue("user"))
+
+		requestNum++
+		w.Write([]byte(`{"ok":true,"channel":{"id":"channel1"}}`))
+	})
+
+	api := slack.NewWebAPI("xxxx-token-12345", nil)
+	api.BaseURL = baseURL
+
+	channelID, err := api.OpenIMChannel(user)
+	require.NoError(t, err)
+	require.Equal(t, 1, requestNum)
+
+	assert.Equal(t, "channel1", channelID)
+}
+
+func TestWebAPI_OpenIMChannel_ErrorHandling(t *testing.T) {
+	mux, baseURL, teardown := setup()
+	defer teardown()
+
+	user := slack.User{ID: "123", Name: "user1"}
+
+	var requestNum int
+	mux.HandleFunc("/im.open", func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, "xxxx-token-12345", r.FormValue("token"))
+		assert.Equal(t, user.ID, r.FormValue("user"))
+
+		requestNum++
+		w.Write([]byte(`{"ok":false,"error":"user_not_found"`))
+	})
+
+	api := slack.NewWebAPI("xxxx-token-12345", nil)
+	api.BaseURL = baseURL
+
+	_, err := api.OpenIMChannel(user)
 	require.Equal(t, 1, requestNum)
 	assert.Error(t, err)
 }

@@ -101,14 +101,22 @@ func TestResponseBuilder_DeployAnnouncement(t *testing.T) {
 	githubClient := github.NewClient("", nil)
 	githubClient.BaseURL = baseURL
 
-	user := slack.User{ID: "abc123", Name: "user1"}
+	d := deploy.Deploy{
+		User:    slack.User{ID: "abc123", Name: "user1"},
+		Subject: "new feature",
+		PullRequests: []deploy.PullRequestReference{
+			{ID: "123", Repository: "user1/repo1"},
+			{ID: "234", Repository: "user2/repo2"},
+		},
+		StartedAt: time.Now(),
+	}
 
 	b := bot.NewResponseBuilder(githubClient)
-	response := b.DeployAnnouncement(user, "user1/repo1#123 and user2/repo2#234")
+	response := b.DeployAnnouncement(d)
 
 	assert.Equal(t, slack.ResponseTypeInChannel, response.ResponseType)
-	assert.Contains(t, response.Text, user.String())
-	assert.Contains(t, response.Text, "user1/repo1#123 and user2/repo2#234")
+	assert.Contains(t, response.Text, d.User.String())
+	assert.Contains(t, response.Text, d.Subject)
 
 	if assert.Len(t, response.Attachments, 2) {
 		assert.Equal(t, "PR #123: Hello", response.Attachments[0].Title)

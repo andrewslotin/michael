@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"github.com/andrewslotin/michael/bot"
+	"github.com/andrewslotin/michael/deploy"
 	"github.com/andrewslotin/michael/slack"
 	"github.com/stretchr/testify/assert"
 )
@@ -29,7 +30,7 @@ func TestSlackTopicManager_DeployStarted_NoRunningDeploy(t *testing.T) {
 	webAPI.BaseURL = baseURL
 
 	mgr := bot.NewSlackTopicManager(webAPI)
-	mgr.DeployStarted(channel.ID)
+	mgr.DeployStarted(channel.ID, deploy.Deploy{})
 
 	assert.Equal(t, "-=:poop:"+strings.Repeat(bot.DeployInProgressEmotion, 3)+":poop:=-", channel.Topic)
 }
@@ -45,7 +46,7 @@ func TestSlackTopicManager_DeployStarted_NoTopicNotification(t *testing.T) {
 	webAPI.BaseURL = baseURL
 
 	mgr := bot.NewSlackTopicManager(webAPI)
-	mgr.DeployStarted(channel.ID)
+	mgr.DeployStarted(channel.ID, deploy.Deploy{})
 
 	assert.Equal(t, "-=:poop:=-", channel.Topic)
 }
@@ -61,7 +62,7 @@ func TestSlackTopicManager_DeployStarted_InProgress(t *testing.T) {
 	webAPI.BaseURL = baseURL
 
 	mgr := bot.NewSlackTopicManager(webAPI)
-	mgr.DeployStarted(channel.ID)
+	mgr.DeployStarted(channel.ID, deploy.Deploy{})
 
 	assert.Equal(t, "-=:poop:"+strings.Repeat(bot.DeployInProgressEmotion, 3)+":poop:=-", channel.Topic)
 }
@@ -77,7 +78,7 @@ func TestSlackTopicManager_DeployCompleted_InProgress(t *testing.T) {
 	webAPI.BaseURL = baseURL
 
 	mgr := bot.NewSlackTopicManager(webAPI)
-	mgr.DeployCompleted(channel.ID)
+	mgr.DeployCompleted(channel.ID, deploy.Deploy{})
 
 	assert.Equal(t, "-=:poop:"+strings.Repeat(bot.DeployDoneEmotion, 3)+":poop:=-", channel.Topic)
 }
@@ -93,7 +94,7 @@ func TestSlackTopicManager_DeployCompleted_NoTopicNotification(t *testing.T) {
 	webAPI.BaseURL = baseURL
 
 	mgr := bot.NewSlackTopicManager(webAPI)
-	mgr.DeployCompleted(channel.ID)
+	mgr.DeployCompleted(channel.ID, deploy.Deploy{})
 
 	assert.Equal(t, "-=:poop:=-", channel.Topic)
 }
@@ -109,7 +110,7 @@ func TestSlackTopicManager_DeployCompleted_NoRunningDeploy(t *testing.T) {
 	webAPI.BaseURL = baseURL
 
 	mgr := bot.NewSlackTopicManager(webAPI)
-	mgr.DeployCompleted(channel.ID)
+	mgr.DeployCompleted(channel.ID, deploy.Deploy{})
 
 	assert.Equal(t, "-=:poop:"+strings.Repeat(bot.DeployDoneEmotion, 3)+":poop:=-", channel.Topic)
 }

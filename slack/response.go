@@ -1,21 +1,20 @@
 package slack
 
 type Response struct {
+	Message
 	ResponseType responseType `json:"response_type,omitempty"`
-	Text         string       `json:"text"`
-	Attachments  []Attachment `json:"attachments,omitempty"`
 }
 
 func NewEphemeralResponse(text string) *Response {
 	return &Response{
 		ResponseType: ResponseTypeEphemeral,
-		Text:         text,
+		Message:      Message{Text: text},
 	}
 }
 
 func NewInChannelResponse(text string) *Response {
 	return &Response{
 		ResponseType: ResponseTypeInChannel,
-		Text:         text,
+		Message:      Message{Text: text},
 	}
 }

@@ -76,6 +76,71 @@ func (api *WebAPI) GetChannelTopic(channelID string) (string, error) {
 	return v.Channel.Topic.Value, nil
 }
 
+func (api *WebAPI) ListUsers() ([]User, error) {
+	const method = "users.list"
+
+	resp, requestURL, err := api.Call(method, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	var v struct {
+		Members []User `json:"members"`
+	}
+	if err := json.Unmarshal(resp, &v); err != nil {
+		return nil, wrapError(fmt.Errorf("failed to decode response body %q (%s)", resp, err), method, requestURL)
+	}
+
+	return v.Members, nil
+}
+
+func (api *WebAPI) PostMessage(channelID string, message Message) error {
+	const method = "chat.postMessage"
+
+	params := url.Values{}
+	params.Set("channel", channelID)
+	params.Set("text", message.Text)
+
+	if len(message.Attachments) > 0 {
+		attachments, err := json.Marshal(message.Attachments)
+		if err != nil {
+			return fmt.Errorf("failed to encode attachments for message %s: %s", message.Text, err)
+		}
+
+		params.Set("attachments", string(attachments))
+	}
+
+	_, requestURL, err := api.Call(method, params)
+	if err != nil {
+		return wrapError(fmt.Errorf("failed to post message %v to channel %s: %s", message, channelID, err), method, requestURL)
+	}
+
+	return nil
+}
+
+func (api *WebAPI) OpenIMChannel(user User) (string, error) {
+	const method = "im.open"
+
+	params := url.Values{}
+	params.Set("user", user.ID)
+
+	resp, requestURL, err := api.Call(method, params)
+	if err != nil {
+		return "", fmt.Errorf("failed to open an IM message with %s: %s", user, err)
+	}
+
+	var v struct {
+		Channel struct {
+			ID string `json:"id"`
+		} `json:"channel"`
+	}
+	if err := json.Unmarshal(resp, &v); err != nil {
+		return "", wrapError(fmt.Errorf("failed to decode response body %q (%s)", resp, err), method, requestURL)
+	}
+
+	return v.Channel.ID, nil
+}
+
 func (api *WebAPI) Call(method string, params url.Values) (response []byte, u *url.URL, err error) {
 	req, err := http.NewRequest("GET", api.BaseURL+"/"+method, nil)
 	if err != nil {

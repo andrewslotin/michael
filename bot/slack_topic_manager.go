@@ -4,6 +4,7 @@ import (
 	"log"
 	"strings"
 
+	"github.com/andrewslotin/michael/deploy"
 	"github.com/andrewslotin/michael/slack"
 )
 
@@ -20,7 +21,7 @@ func NewSlackTopicManager(webAPIClient *slack.WebAPI) *SlackTopicManager {
 	return &SlackTopicManager{api: webAPIClient}
 }
 
-func (mgr *SlackTopicManager) DeployStarted(channelID string) {
+func (mgr *SlackTopicManager) DeployStarted(channelID string, _ deploy.Deploy) {
 	currentTopic, err := mgr.api.GetChannelTopic(channelID)
 	if err == nil {
 		newTopic := strings.Replace(currentTopic, DeployDoneEmotion, DeployInProgressEmotion, -1)
@@ -34,7 +35,7 @@ func (mgr *SlackTopicManager) DeployStarted(channelID string) {
 	}
 }
 
-func (mgr *SlackTopicManager) DeployCompleted(channelID string) {
+func (mgr *SlackTopicManager) DeployCompleted(channelID string, _ deploy.Deploy) {
 	currentTopic, err := mgr.api.GetChannelTopic(channelID)
 	if err == nil {
 		newTopic := strings.Replace(currentTopic, DeployInProgressEmotion, DeployDoneEmotion, -1)

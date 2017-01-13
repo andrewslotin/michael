@@ -100,7 +100,10 @@ func main() {
 
 	if slackWebAPIToken := os.Getenv("SLACK_WEBAPI_TOKEN"); slackWebAPIToken != "" {
 		api := slack.NewWebAPI(slackWebAPIToken, nil)
+		// Update channel topic to reflect current deploy status
 		slackBot.AddDeployEventHandler(bot.NewSlackTopicManager(api))
+		// Send direct messages to users mentioned in deploy subject
+		slackBot.AddDeployEventHandler(bot.NewSlackIMNotifier(api))
 	} else {
 		log.Printf("SLACK_WEBAPI_TOKEN env variable not set, channel topic notifications are disabled")
 	}

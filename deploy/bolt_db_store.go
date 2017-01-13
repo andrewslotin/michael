@@ -1,6 +1,7 @@
 package deploy
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"time"
@@ -10,11 +11,13 @@ import (
 )
 
 const (
-	userIDKey     = "user.id"
-	userNameKey   = "user.name"
-	subjectKey    = "subject"
-	startedAtKey  = "started_at"
-	finishedAtKey = "finished_at"
+	userIDKey       = "user.id"
+	userNameKey     = "user.name"
+	subjectKey      = "subject"
+	startedAtKey    = "started_at"
+	finishedAtKey   = "finished_at"
+	pullRequestsKey = "prs"
+	subscribersKey  = "subscribers"
 )
 
 var (
@@ -162,6 +165,24 @@ func (s *BoltDBStore) writeDeploy(deploy Deploy, channelBucket *bolt.Bucket) err
 		b.Put([]byte(finishedAtKey), []byte(deploy.FinishedAt.Format(time.RFC3339Nano)))
 	}
 
+	if len(deploy.PullRequests) != 0 {
+		data, err := json.Marshal(deploy.PullRequests)
+		if err != nil {
+			return err
+		}
+
+		b.Put([]byte(pullRequestsKey), data)
+	}
+
+	if len(deploy.Subscribers) != 0 {
+		data, err := json.Marshal(deploy.Subscribers)
+		if err != nil {
+			return err
+		}
+
+		b.Put([]byte(subscribersKey), data)
+	}
+
 	return nil
 }
 
@@ -188,6 +209,18 @@ func (*BoltDBStore) readDeploy(key []byte, channelBucket *bolt.Bucket) (deploy D
 			return deploy, fmt.Errorf("malformed finished_at time for deploy of %s by %s: %s", deploy.Subject, deploy.User.Name, err)
 		} else {
 			deploy.FinishedAt = finishedAt
+		}
+	}
+
+	if value := b.Get([]byte(pullRequestsKey)); value != nil {
+		if err := json.Unmarshal(value, &deploy.PullRequests); err != nil {
+			return deploy, fmt.Errorf("malformed prs for deploy of %s by %s: %s", deploy.Subject, deploy.User.Name, err)
+		}
+	}
+
+	if value := b.Get([]byte(subscribersKey)); value != nil {
+		if err := json.Unmarshal(value, &deploy.Subscribers); err != nil {
+			return deploy, fmt.Errorf("malformed users for deploy of %s by %s: %s", deploy.Subject, deploy.User.Name, err)
 		}
 	}
 

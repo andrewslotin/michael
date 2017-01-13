@@ -9,6 +9,28 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+func TestNewDeploy(t *testing.T) {
+	var (
+		user    = slack.User{ID: "1", Name: "Test User"}
+		subject = "Test deploy https://github.com/a/b/pull/123 and x/y#4 for @user1"
+	)
+
+	d := deploy.New(user, subject)
+	assert.Equal(t, user, d.User)
+	assert.Equal(t, subject, d.Subject)
+	assert.Zero(t, d.StartedAt)
+	assert.Zero(t, d.FinishedAt)
+
+	if assert.Len(t, d.PullRequests, 2) {
+		assert.Contains(t, d.PullRequests, deploy.PullRequestReference{ID: "123", Repository: "a/b"})
+		assert.Contains(t, d.PullRequests, deploy.PullRequestReference{ID: "4", Repository: "x/y"})
+	}
+
+	if assert.Len(t, d.Subscribers, 1) {
+		assert.Contains(t, d.Subscribers, deploy.UserReference{Name: "user1"})
+	}
+}
+
 func TestDeploy_Start(t *testing.T) {
 	d := deploy.New(slack.User{ID: "1", Name: "Test User"}, "Test deploy")
 	assert.True(t, d.Start())
