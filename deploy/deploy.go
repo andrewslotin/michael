@@ -7,20 +7,20 @@ import (
 )
 
 type Deploy struct {
-	User            slack.User
-	Subject         string
-	StartedAt       time.Time
-	FinishedAt      time.Time
-	PullRequests    []PullRequestReference
-	InterestedUsers []UserReference
+	User         slack.User
+	Subject      string
+	StartedAt    time.Time
+	FinishedAt   time.Time
+	PullRequests []PullRequestReference
+	Subscribers  []UserReference
 }
 
 func New(user slack.User, subject string) Deploy {
 	return Deploy{
-		User:            user,
-		Subject:         subject,
-		PullRequests:    FindPullRequestReferences(subject),
-		InterestedUsers: FindUserReferences(subject),
+		User:         user,
+		Subject:      subject,
+		PullRequests: FindPullRequestReferences(subject),
+		Subscribers:  FindUserReferences(subject),
 	}
 }
 

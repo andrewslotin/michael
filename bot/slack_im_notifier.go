@@ -23,7 +23,7 @@ func NewSlackIMNotifier(api *slack.WebAPI) *SlackIMNotifier {
 func (notifier *SlackIMNotifier) DeployStarted(_ string, _ deploy.Deploy) {}
 
 func (notifier *SlackIMNotifier) DeployCompleted(_ string, d deploy.Deploy) {
-	for _, userRef := range d.InterestedUsers {
+	for _, userRef := range d.Subscribers {
 		user, err := notifier.users.Fetch(userRef.Name)
 		if err != nil {
 			if _, ok := err.(slack.NoSuchUserError); !ok {

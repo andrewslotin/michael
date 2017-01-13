@@ -26,8 +26,8 @@ func TestNewDeploy(t *testing.T) {
 		assert.Contains(t, d.PullRequests, deploy.PullRequestReference{ID: "4", Repository: "x/y"})
 	}
 
-	if assert.Len(t, d.InterestedUsers, 1) {
-		assert.Contains(t, d.InterestedUsers, deploy.UserReference{Name: "user1"})
+	if assert.Len(t, d.Subscribers, 1) {
+		assert.Contains(t, d.Subscribers, deploy.UserReference{Name: "user1"})
 	}
 }
 

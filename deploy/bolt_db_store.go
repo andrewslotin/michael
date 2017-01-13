@@ -17,7 +17,7 @@ const (
 	startedAtKey    = "started_at"
 	finishedAtKey   = "finished_at"
 	pullRequestsKey = "prs"
-	usersKey        = "users"
+	subscribersKey  = "subscribers"
 )
 
 var (
@@ -174,13 +174,13 @@ func (s *BoltDBStore) writeDeploy(deploy Deploy, channelBucket *bolt.Bucket) err
 		b.Put([]byte(pullRequestsKey), data)
 	}
 
-	if len(deploy.InterestedUsers) != 0 {
-		data, err := json.Marshal(deploy.InterestedUsers)
+	if len(deploy.Subscribers) != 0 {
+		data, err := json.Marshal(deploy.Subscribers)
 		if err != nil {
 			return err
 		}
 
-		b.Put([]byte(usersKey), data)
+		b.Put([]byte(subscribersKey), data)
 	}
 
 	return nil
@@ -218,8 +218,8 @@ func (*BoltDBStore) readDeploy(key []byte, channelBucket *bolt.Bucket) (deploy D
 		}
 	}
 
-	if value := b.Get([]byte(usersKey)); value != nil {
-		if err := json.Unmarshal(value, &deploy.InterestedUsers); err != nil {
+	if value := b.Get([]byte(subscribersKey)); value != nil {
+		if err := json.Unmarshal(value, &deploy.Subscribers); err != nil {
 			return deploy, fmt.Errorf("malformed users for deploy of %s by %s: %s", deploy.Subject, deploy.User.Name, err)
 		}
 	}

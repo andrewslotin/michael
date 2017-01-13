@@ -30,7 +30,7 @@ func (suite *StoreSuite) TestGetSet() {
 	if d, ok := store.Get("key1"); assert.True(suite.T(), ok) {
 		assert.Equal(suite.T(), channel1Deploy, d)
 		assert.Equal(suite.T(), channel1Deploy.PullRequests, d.PullRequests)
-		assert.Equal(suite.T(), channel1Deploy.InterestedUsers, d.InterestedUsers)
+		assert.Equal(suite.T(), channel1Deploy.Subscribers, d.Subscribers)
 	}
 
 	// Populate another key
@@ -40,14 +40,14 @@ func (suite *StoreSuite) TestGetSet() {
 	if d, ok := store.Get("key2"); assert.True(suite.T(), ok) {
 		assert.Equal(suite.T(), channel2Deploy, d)
 		assert.Equal(suite.T(), channel2Deploy.PullRequests, d.PullRequests)
-		assert.Equal(suite.T(), channel2Deploy.InterestedUsers, d.InterestedUsers)
+		assert.Equal(suite.T(), channel2Deploy.Subscribers, d.Subscribers)
 	}
 
 	// Check that another record wasn't changed
 	if d, ok := store.Get("key1"); assert.True(suite.T(), ok) {
 		assert.Equal(suite.T(), channel1Deploy, d)
 		assert.Equal(suite.T(), channel1Deploy.PullRequests, d.PullRequests)
-		assert.Equal(suite.T(), channel1Deploy.InterestedUsers, d.InterestedUsers)
+		assert.Equal(suite.T(), channel1Deploy.Subscribers, d.Subscribers)
 	}
 }
 
