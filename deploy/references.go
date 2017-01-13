@@ -16,7 +16,8 @@ var (
 		// numbers 0 to 9, hyphens, periods, and underscores.
 		//
 		// See https://get.slack.help/hc/en-us/articles/216360827-Change-your-username
-		regexp.MustCompile("^@(?P<username>[A-Za-z0-9\\._-]+)"),
+		regexp.MustCompile("^@(?P<username>[A-Za-z0-9\\._-]+)"),                           // unescaped, i.e. @user1
+		regexp.MustCompile("^<@(?P<userid>[A-Z0-9]+)\\|(?P<username>[A-Za-z0-9\\._-]+)>"), // escaped, i.e. <@U1|user1>
 	}
 )
 
@@ -64,6 +65,7 @@ func extractPullRequestReference(s string, re *regexp.Regexp) (ref PullRequestRe
 }
 
 type UserReference struct {
+	ID   string
 	Name string
 }
 
@@ -95,6 +97,8 @@ func extractUserReference(s string, re *regexp.Regexp) (ref UserReference, ok bo
 		switch name {
 		case "username":
 			ref.Name = m[i]
+		case "userid":
+			ref.ID = m[i]
 		default:
 			continue
 		}

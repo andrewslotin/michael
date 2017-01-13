@@ -57,7 +57,7 @@ func TestFindPullRequestReferences_Mixed_Multiple(t *testing.T) {
 	}
 }
 
-func TestFindUserReferences(t *testing.T) {
+func TestFindUserReferences_Short(t *testing.T) {
 	s := "" +
 		"hello @person_1, my email is writeme@gmail.com, see you @ the bar. " +
 		"if you see @person.2 please send him to @me"
@@ -67,5 +67,14 @@ func TestFindUserReferences(t *testing.T) {
 		assert.Contains(t, refs, deploy.UserReference{Name: "person_1"})
 		assert.Contains(t, refs, deploy.UserReference{Name: "person.2"})
 		assert.Contains(t, refs, deploy.UserReference{Name: "me"})
+	}
+}
+
+func TestFindUserReferences_Long(t *testing.T) {
+	s := "hey <@U1|user1>, what's up? how's <@U2>, <U3|user3> and <@U4|user4?"
+
+	refs := deploy.FindUserReferences(s)
+	if assert.Len(t, refs, 1) {
+		assert.Contains(t, refs, deploy.UserReference{ID: "U1", Name: "user1"})
 	}
 }
