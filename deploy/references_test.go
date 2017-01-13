@@ -18,7 +18,7 @@ func TestFindPullRequestReferences_Short(t *testing.T) {
 
 func TestFindPullRequestReferences_GitHubLink(t *testing.T) {
 	s := "" +
-		"https://github.com/user/project/pull/1 " +
+		"https://github.com/user/project/pull/1?w=1#comment-123 " +
 		"https://github.com/user/project/issues/2 " +
 		"https://github.com/user/project/pulls " +
 		"https://bitbucket.org/user/project/pull/3"

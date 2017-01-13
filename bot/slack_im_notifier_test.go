@@ -19,9 +19,9 @@ func TestSlackIMNotifier_DeployCompleted(t *testing.T) {
 		User:    slack.User{ID: "U1", Name: "author"},
 		Subject: "Deploy subject",
 		Subscribers: []deploy.UserReference{
-			{"recipient1"},
-			{"nonExistingRecipient"},
-			{"recipient2"},
+			{Name: "recipient1"},
+			{Name: "nonExistingRecipient"},
+			{Name: "recipient2"},
 		},
 	}
 
