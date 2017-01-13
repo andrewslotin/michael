@@ -100,6 +100,7 @@ func (api *WebAPI) PostMessage(channelID string, message Message) error {
 	params := url.Values{}
 	params.Set("channel", channelID)
 	params.Set("text", message.Text)
+	params.Set("link_names", "1")
 
 	if len(message.Attachments) > 0 {
 		attachments, err := json.Marshal(message.Attachments)
