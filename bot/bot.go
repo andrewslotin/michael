@@ -6,6 +6,7 @@ import (
 	"errors"
 	"log"
 	"net/http"
+	"strings"
 
 	"github.com/andrewslotin/michael/auth"
 	"github.com/andrewslotin/michael/deploy"
@@ -72,10 +73,12 @@ func (b *Bot) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// TODO: make commands case-insensitive
-	switch subject := r.PostFormValue("text"); subject {
-	case "", "help":
+	subject := strings.TrimSpace(r.PostFormValue("text"))
+
+	switch {
+	case subject == "help" || subject == "":
 		sendImmediateResponse(w, b.responses.HelpMessage())
-	case "status":
+	case subject == "status":
 		d, ok := b.deploys.Current(channelID)
 		if !ok {
 			sendImmediateResponse(w, b.responses.NoRunningDeploysMessage())
@@ -83,7 +86,7 @@ func (b *Bot) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		}
 
 		sendImmediateResponse(w, b.responses.DeployStatusMessage(d))
-	case "done":
+	case subject == "done":
 		d, ok := b.deploys.Finish(channelID)
 		if !ok {
 			sendImmediateResponse(w, b.responses.NoRunningDeploysMessage())
@@ -99,7 +102,7 @@ func (b *Bot) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		for _, h := range b.deployEventHandlers {
 			go h.DeployCompleted(channelID, d)
 		}
-	case "abort":
+	case subject == "abort" || strings.HasPrefix(subject, "abort "):
 		d, ok := b.deploys.Abort(channelID)
 		if !ok {
 			sendImmediateResponse(w, b.responses.NoRunningDeploysMessage())
@@ -111,7 +114,7 @@ func (b *Bot) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		for _, h := range b.deployEventHandlers {
 			go h.DeployAborted(channelID, d)
 		}
-	case "history":
+	case subject == "history":
 		dashboardToken, err := b.dashboardAuth.IssueToken(auth.DefaultTokenLength)
 		if err != nil {
 			sendImmediateResponse(w, b.responses.ErrorMessage("history", err))
