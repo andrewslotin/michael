@@ -27,6 +27,7 @@ const (
 	deployInterruptedMessage  = "%s has finished the deploy started by %s"
 	deployAnnouncementMessage = "%s is about to deploy %s"
 	deployHistoryLinkMessage  = "Click <https://%s/%s|here> to see deploy history in this channel"
+	deployAbortedMessage      = "%s has aborted the deploy"
 )
 
 type ResponseBuilder struct {
@@ -88,6 +89,10 @@ func (b *ResponseBuilder) DeployAnnouncement(d deploy.Deploy) *slack.Response {
 
 func (b *ResponseBuilder) DeployDoneAnnouncement(user slack.User) *slack.Response {
 	return newAnnouncement(fmt.Sprintf(deployDoneMessage, user))
+}
+
+func (b *ResponseBuilder) DeployAbortedAnnouncement(user slack.User) *slack.Response {
+	return newAnnouncement(fmt.Sprintf(deployAbortedMessage, user))
 }
 
 func (*ResponseBuilder) DeployHistoryLink(host, channelID, authToken string) *slack.Response {
