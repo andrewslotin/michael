@@ -8,8 +8,8 @@ import (
 
 var (
 	pullRequestReferenceRegexes = []*regexp.Regexp{
-		regexp.MustCompile("^(?P<repository>\\S+/\\S+)#(?P<number>\\d+)[^A-Za-z]?$"),                          // octocat/helloworld#12
-		regexp.MustCompile("^https?://github.com/(?P<repository>\\S+/\\S+)/pull/(?P<number>\\d+)(?:\\?|#|$)"), // https://github.com/octocat/helloworld/pull/12
+		regexp.MustCompile("^(?P<repository>[A-Za-z0-9\\._-]+/[A-Za-z0-9\\._-]+)#(?P<number>\\d+)[^A-Za-z]?$"),    // octocat/helloworld#12
+		regexp.MustCompile("^<?https?://github.com/(?P<repository>\\S+/\\S+)/pull/(?P<number>\\d+)(?:[\\?#>]|$)"), // https://github.com/octocat/helloworld/pull/12
 	}
 	userReferenceRegexes = []*regexp.Regexp{
 		// Usernames can be up to 21 characters long. They can contain lowercase letters a to z (without accents),

@@ -29,6 +29,15 @@ func TestFindPullRequestReferences_GitHubLink(t *testing.T) {
 	}
 }
 
+func TestFindPullRequestReferences_Escaped(t *testing.T) {
+	s := "<https://github.com/user/project/pull/1?w=1#comment-123> <user/project#123>"
+
+	refs := deploy.FindPullRequestReferences(s)
+	if assert.Len(t, refs, 1) {
+		assert.Contains(t, refs, deploy.PullRequestReference{ID: "1", Repository: "user/project"})
+	}
+}
+
 func TestFindPullRequestReferences_Mixed_Multiple(t *testing.T) {
 	s := "" +
 		"userA/projectA#1, " +
