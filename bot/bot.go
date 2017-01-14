@@ -16,6 +16,7 @@ import (
 type DeployEventHandler interface {
 	DeployStarted(channelID string, d deploy.Deploy)
 	DeployCompleted(channelID string, d deploy.Deploy)
+	DeployAborted(channelID string, d deploy.Deploy)
 }
 
 type Bot struct {
@@ -97,6 +98,18 @@ func (b *Bot) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 		for _, h := range b.deployEventHandlers {
 			go h.DeployCompleted(channelID, d)
+		}
+	case "abort":
+		d, ok := b.deploys.Abort(channelID)
+		if !ok {
+			sendImmediateResponse(w, b.responses.NoRunningDeploysMessage())
+			return
+		}
+
+		go sendDelayedResponse(w, r, b.responses.DeployAbortedAnnouncement(user))
+
+		for _, h := range b.deployEventHandlers {
+			go h.DeployAborted(channelID, d)
 		}
 	case "history":
 		dashboardToken, err := b.dashboardAuth.IssueToken(auth.DefaultTokenLength)
