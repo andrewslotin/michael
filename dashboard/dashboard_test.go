@@ -76,6 +76,7 @@ func TestDashboard_MultipleDeploys(t *testing.T) {
 	d2 := deploy.New(slack.User{ID: "1", Name: "Test User"}, "Second deploy")
 	d2.StartedAt, _ = time.Parse(time.RFC822, "04 Aug 16 09:39 CEST")
 	d2.FinishedAt, _ = time.Parse(time.RFC822, "04 Aug 16 09:40 CEST")
+	d2.Aborted = true
 
 	d3 := deploy.New(slack.User{ID: "2", Name: "Another User"}, "Third deploy")
 	d3.StartedAt, _ = time.Parse(time.RFC822, "04 Aug 16 09:50 CEST")
@@ -100,7 +101,7 @@ func TestDashboard_MultipleDeploys(t *testing.T) {
 		"--------------\n" +
 		"\n" +
 		"* Test User was deploying First deploy since 04 Aug 16 09:28 CEST until 04 Aug 16 09:38 CEST\n" +
-		"* Test User was deploying Second deploy since 04 Aug 16 09:39 CEST until 04 Aug 16 09:40 CEST\n" +
+		"* Test User was deploying Second deploy since 04 Aug 16 09:39 CEST until 04 Aug 16 09:40 CEST (aborted)\n" +
 		"* Another User is currently deploying Third deploy since 04 Aug 16 09:50 CEST"
 
 	assert.Equal(t, expected, string(bytes.TrimSpace(body)))
