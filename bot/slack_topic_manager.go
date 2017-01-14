@@ -35,6 +35,13 @@ func (mgr *SlackTopicManager) DeployCompleted(channelID string, _ deploy.Deploy)
 	}
 }
 
+func (mgr *SlackTopicManager) DeployAborted(channelID string, _ deploy.Deploy) {
+	err := mgr.channelTopicReplace(channelID, DeployInProgressEmotion, DeployDoneEmotion)
+	if err != nil {
+		log.Printf("slack-topic-manager: %s", err)
+	}
+}
+
 func (mgr *SlackTopicManager) channelTopicReplace(channelID, old, new string) error {
 	currentTopic, err := mgr.api.GetChannelTopic(channelID)
 	if err != nil {
