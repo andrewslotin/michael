@@ -11,6 +11,7 @@ type Deploy struct {
 	Subject      string
 	StartedAt    time.Time
 	FinishedAt   time.Time
+	Aborted      bool
 	PullRequests []PullRequestReference
 	Subscribers  []UserReference
 }
@@ -24,6 +25,10 @@ func New(user slack.User, subject string) Deploy {
 	}
 }
 
+func (d Deploy) Finished() bool {
+	return !d.FinishedAt.IsZero()
+}
+
 func (d *Deploy) Start() bool {
 	if !d.StartedAt.IsZero() {
 		return false
@@ -34,11 +39,20 @@ func (d *Deploy) Start() bool {
 }
 
 func (d *Deploy) Finish() {
-	if !d.FinishedAt.IsZero() {
+	if d.Finished() {
 		return
 	}
 
 	d.FinishedAt = time.Now().UTC()
+}
+
+func (d *Deploy) Abort() {
+	if d.Finished() {
+		return
+	}
+
+	d.Finish()
+	d.Aborted = true
 }
 
 func (d1 Deploy) Equal(d2 Deploy) bool {
