@@ -45,13 +45,13 @@ func (repo *ChannelDeploys) Finish(channelID string) (Deploy, bool) {
 	return current, true
 }
 
-func (repo *ChannelDeploys) Abort(channelID string) (Deploy, bool) {
+func (repo *ChannelDeploys) Abort(channelID, reason string) (Deploy, bool) {
 	current, ok := repo.Current(channelID)
 	if !ok {
 		return current, false
 	}
 
-	current.Abort()
+	current.Abort(reason)
 	repo.store.Set(channelID, current)
 
 	return current, true

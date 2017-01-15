@@ -18,6 +18,7 @@ type jsonPresenter struct {
 	StartedAt  time.Time `json:"started_at"`
 	FinishedAt time.Time `json:"finished_at,omitempty"`
 	Aborted    bool      `json:"aborted,omitempty"`
+	Reason     string    `json:"reason,omitempty"`
 }
 
 type jsonFormatter struct{}
@@ -32,6 +33,7 @@ func (jsonFormatter) RespondWithHistory(w http.ResponseWriter, history []deploy.
 		v[i].StartedAt = d.StartedAt
 		v[i].FinishedAt = d.FinishedAt
 		v[i].Aborted = d.Aborted
+		v[i].Reason = d.AbortReason
 	}
 
 	data, err := json.Marshal(v)

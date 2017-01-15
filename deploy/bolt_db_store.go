@@ -166,7 +166,7 @@ func (s *BoltDBStore) writeDeploy(deploy Deploy, channelBucket *bolt.Bucket) err
 		b.Put([]byte(finishedAtKey), []byte(deploy.FinishedAt.Format(time.RFC3339Nano)))
 
 		if deploy.Aborted {
-			b.Put([]byte(abortedKey), []byte{1})
+			b.Put([]byte(abortedKey), []byte(deploy.AbortReason))
 		}
 	}
 
@@ -217,7 +217,10 @@ func (*BoltDBStore) readDeploy(key []byte, channelBucket *bolt.Bucket) (deploy D
 		}
 	}
 
-	deploy.Aborted = b.Get([]byte(abortedKey)) != nil
+	if value := b.Get([]byte(abortedKey)); value != nil {
+		deploy.Aborted = true
+		deploy.AbortReason = string(value)
+	}
 
 	if value := b.Get([]byte(pullRequestsKey)); value != nil {
 		if err := json.Unmarshal(value, &deploy.PullRequests); err != nil {

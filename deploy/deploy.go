@@ -12,6 +12,7 @@ type Deploy struct {
 	StartedAt    time.Time
 	FinishedAt   time.Time
 	Aborted      bool
+	AbortReason  string
 	PullRequests []PullRequestReference
 	Subscribers  []UserReference
 }
@@ -46,13 +47,13 @@ func (d *Deploy) Finish() {
 	d.FinishedAt = time.Now().UTC()
 }
 
-func (d *Deploy) Abort() {
+func (d *Deploy) Abort(reason string) {
 	if d.Finished() {
 		return
 	}
 
 	d.Finish()
-	d.Aborted = true
+	d.Aborted, d.AbortReason = true, reason
 }
 
 func (d1 Deploy) Equal(d2 Deploy) bool {

@@ -103,13 +103,18 @@ func (b *Bot) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			go h.DeployCompleted(channelID, d)
 		}
 	case subject == "abort" || strings.HasPrefix(subject, "abort "):
-		d, ok := b.deploys.Abort(channelID)
+		var reason string
+		if strings.HasPrefix(subject, "abort ") && len(subject) > len("abort ") {
+			reason = subject[len("abort "):]
+		}
+
+		d, ok := b.deploys.Abort(channelID, reason)
 		if !ok {
 			sendImmediateResponse(w, b.responses.NoRunningDeploysMessage())
 			return
 		}
 
-		go sendDelayedResponse(w, r, b.responses.DeployAbortedAnnouncement(user))
+		go sendDelayedResponse(w, r, b.responses.DeployAbortedAnnouncement(reason, user))
 
 		for _, h := range b.deployEventHandlers {
 			go h.DeployAborted(channelID, d)

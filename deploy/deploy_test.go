@@ -55,12 +55,12 @@ func TestDeploy_Finish(t *testing.T) {
 
 func TestDeploy_Abort_RunningDeploy(t *testing.T) {
 	d := deploy.New(slack.User{ID: "1", Name: "Test User"}, "Test deploy")
-	d.Abort()
+	d.Abort("for reason")
 	assert.WithinDuration(t, time.Now(), d.FinishedAt, time.Second)
 	assert.True(t, d.Aborted)
 
 	finishedAt := d.FinishedAt
-	d.Abort()
+	d.Abort("for reason")
 	assert.Equal(t, finishedAt, d.FinishedAt)
 	assert.True(t, d.Aborted)
 }
@@ -70,7 +70,7 @@ func TestDeploy_Abort_FinishedDeploy(t *testing.T) {
 	d.Finish()
 
 	finishedAt := d.FinishedAt
-	d.Abort()
+	d.Abort("for reason")
 	assert.Equal(t, finishedAt, d.FinishedAt)
 	assert.False(t, d.Aborted)
 }

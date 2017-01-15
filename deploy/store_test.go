@@ -27,11 +27,12 @@ func (suite *StoreSuite) TestGetSet() {
 
 	// Store a value
 	channel1Deploy := deploy.Deploy{
-		User:       slack.User{ID: "1", Name: "Test User"},
-		Subject:    "Deploy subject a/b#1 and c/d#2 for @user1 and @user2",
-		StartedAt:  time.Now().Add(-5 * time.Minute),
-		FinishedAt: time.Now().Add(-1 * time.Minute),
-		Aborted:    true,
+		User:        slack.User{ID: "1", Name: "Test User"},
+		Subject:     "Deploy subject a/b#1 and c/d#2 for @user1 and @user2",
+		StartedAt:   time.Now().Add(-5 * time.Minute),
+		FinishedAt:  time.Now().Add(-1 * time.Minute),
+		Aborted:     true,
+		AbortReason: "something went wrong",
 		PullRequests: []deploy.PullRequestReference{
 			{ID: "1", Repository: "a/b"},
 			{ID: "2", Repository: "c/d"},
