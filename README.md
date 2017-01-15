@@ -59,6 +59,18 @@ Deploys are tracked per channel. This means that different channels can run diff
     
     <img src="../master/docs/deploy-finish-other.png" alt="Complete unfinished deploy" height="42">
 
+* <kbd>/deploy abort</kbd> — abort current deploy.
+    If the things went wrong you might need to rollback your changes and abort current deploy.
+
+    <img src="../master/docs/deploy-abort.png" alt="Deploy aborted announcement" height="42">
+
+    You may also provide a reason for aborting a deploy that will be kept in channel deploys log:
+    ```
+    /deploy abort something went wrong with deploy
+    ```
+
+    <img src="../master/docs/deploy-abort-reason.png" alt="Deploy aborted with reason announcement" height="42">
+
 ### Deploy status in channel topic
 
 In addition to announcing deploys in channel you may find it useful to have a small sign in the channel topic. This way you can quickly check
@@ -80,6 +92,11 @@ You can mention one or multiple users in deploy subject.
 Once the deploy is done, they all will receive a direct message from deploy bot.
 
 <img src="../master/docs/deploy-mention-notification.png" alt="Deploy done direct message notification" height="44">
+
+*Note: no notifications will be sent if the deploy has been aborted.*
+
+As in case with deploy status in channel topic, you would need to provide [Slack Web API token](https://api.slack.com/docs/oauth-test-tokens) in
+`SLACK_WEBAPI_TOKEN` environment variable to enable this feature.
 
 ### Persistent deploy statuses
 
