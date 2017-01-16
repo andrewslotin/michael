@@ -107,7 +107,7 @@ func (b *Bot) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 		sendImmediateResponse(w, b.responses.DeployHistoryLink(r.Host, channelID, dashboardToken))
 	default:
-		d, ok := b.deploys.Start(channelID, deploy.New(user, subject))
+		d, ok := b.deploys.Start(channelID, deploy.New(user, slack.EscapeMessage(subject)))
 		if !ok {
 			sendImmediateResponse(w, b.responses.DeployInProgressMessage(d))
 			return
