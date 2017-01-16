@@ -23,14 +23,23 @@ func NewSlackIMNotifier(api *slack.WebAPI) *SlackIMNotifier {
 func (notifier *SlackIMNotifier) DeployStarted(_ string, _ deploy.Deploy) {}
 
 func (notifier *SlackIMNotifier) DeployCompleted(_ string, d deploy.Deploy) {
-	for _, userRef := range d.Subscribers {
-		user, err := notifier.users.Fetch(userRef.Name)
-		if err != nil {
-			if _, ok := err.(slack.NoSuchUserError); !ok {
-				log.Printf("cannot notify %s about completed deploy of %s: %s", user.Name, d.Subject, err)
-			}
+	var (
+		user slack.User
+		err  error
+	)
 
-			continue
+	for _, userRef := range d.Subscribers {
+		if userRef.ID != "" {
+			user.ID, user.Name = userRef.ID, userRef.Name
+		} else {
+			user, err = notifier.users.Fetch(userRef.Name)
+			if err != nil {
+				if _, ok := err.(slack.NoSuchUserError); !ok {
+					log.Printf("cannot notify %s about completed deploy of %s: %s", user.Name, d.Subject, err)
+				}
+
+				continue
+			}
 		}
 
 		message := slack.Message{

@@ -256,6 +256,7 @@ func TestWebAPI_PostMessage_WithoutAttachments(t *testing.T) {
 	mux.HandleFunc("/chat.postMessage", func(w http.ResponseWriter, r *http.Request) {
 		assert.Equal(t, "xxxx-token-12345", r.FormValue("token"))
 		assert.Equal(t, "channel1", r.FormValue("channel"))
+		assert.Equal(t, "1", r.FormValue("link_names"))
 		assert.Equal(t, message.Text, r.FormValue("text"))
 
 		requestNum++
@@ -285,6 +286,7 @@ func TestWebAPI_PostMessage_WithAttachments(t *testing.T) {
 	mux.HandleFunc("/chat.postMessage", func(w http.ResponseWriter, r *http.Request) {
 		assert.Equal(t, "xxxx-token-12345", r.FormValue("token"))
 		assert.Equal(t, "channel1", r.FormValue("channel"))
+		assert.Equal(t, "1", r.FormValue("link_names"))
 		assert.Equal(t, message.Text, r.FormValue("text"))
 
 		if encodedAttachments := r.FormValue("attachments"); assert.NotEmpty(t, encodedAttachments) {

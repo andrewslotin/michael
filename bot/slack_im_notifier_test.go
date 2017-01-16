@@ -19,9 +19,9 @@ func TestSlackIMNotifier_DeployCompleted(t *testing.T) {
 		User:    slack.User{ID: "U1", Name: "author"},
 		Subject: "Deploy subject",
 		Subscribers: []deploy.UserReference{
-			{"recipient1"},
-			{"nonExistingRecipient"},
-			{"recipient2"},
+			{ID: "R1", Name: "recipient1"},
+			{Name: "nonExistingRecipient"},
+			{Name: "recipient2"},
 		},
 	}
 
@@ -71,7 +71,7 @@ func TestSlackIMNotifier_DeployCompleted(t *testing.T) {
 	notifier := bot.NewSlackIMNotifier(api)
 	notifier.DeployCompleted("", d)
 
-	assert.Equal(t, 2, requestNum.UsersList) // nonExistingRecipient will not hit the cache
+	assert.Equal(t, 1, requestNum.UsersList) // nonExistingRecipient will not hit the cache
 	assert.Equal(t, 2, requestNum.IMOpen)
 
 	if assert.Len(t, receivers, 2) {
@@ -82,7 +82,7 @@ func TestSlackIMNotifier_DeployCompleted(t *testing.T) {
 	// Retry to check user list caching
 	receivers = receivers[:0]
 	notifier.DeployCompleted("", d)
-	assert.Equal(t, 3, requestNum.UsersList) // +1 request because of nonExistingRecipient
+	assert.Equal(t, 2, requestNum.UsersList) // +1 request because of nonExistingRecipient
 	assert.Equal(t, 2, requestNum.IMOpen)    // no new channels are expected to be open
 
 	if assert.Len(t, receivers, 2) {

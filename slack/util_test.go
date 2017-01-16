@@ -8,7 +8,15 @@ import (
 )
 
 func TestEscapeMessage(t *testing.T) {
-	s := `"Hello' & <<world>>!`
+	examples := map[string]struct{ Value, Expected string }{
+		"common":   {`"Hello' & <<world>>!`, `"Hello' &amp; &lt;&lt;world&gt;&gt;!`},
+		"user_ref": {"Hello <<@U123456|user1>>!", "Hello &lt;<@U123456|user1>&gt;!"},
+		"link":     {"Check <<https://google.com?q=search+term&source=Chrome>>", "Check &lt;<https://google.com?q=search+term&source=Chrome>&gt;"},
+	}
 
-	assert.Equal(t, `"Hello' &amp; &lt;&lt;world&gt;&gt;!`, slack.EscapeMessage(s))
+	for name, example := range examples {
+		t.Run(name, func(t *testing.T) {
+			assert.Equal(t, example.Expected, slack.EscapeMessage(example.Value))
+		})
+	}
 }
