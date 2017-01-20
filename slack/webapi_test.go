@@ -257,6 +257,7 @@ func TestWebAPI_PostMessage_WithoutAttachments(t *testing.T) {
 		assert.Equal(t, "xxxx-token-12345", r.FormValue("token"))
 		assert.Equal(t, "channel1", r.FormValue("channel"))
 		assert.Equal(t, "1", r.FormValue("link_names"))
+		assert.Equal(t, "true", r.FormValue("as_user"))
 		assert.Equal(t, message.Text, r.FormValue("text"))
 
 		requestNum++
@@ -287,6 +288,7 @@ func TestWebAPI_PostMessage_WithAttachments(t *testing.T) {
 		assert.Equal(t, "xxxx-token-12345", r.FormValue("token"))
 		assert.Equal(t, "channel1", r.FormValue("channel"))
 		assert.Equal(t, "1", r.FormValue("link_names"))
+		assert.Equal(t, "true", r.FormValue("as_user"))
 		assert.Equal(t, message.Text, r.FormValue("text"))
 
 		if encodedAttachments := r.FormValue("attachments"); assert.NotEmpty(t, encodedAttachments) {
