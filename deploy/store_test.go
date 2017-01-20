@@ -44,7 +44,12 @@ func (suite *StoreSuite) TestGetSet() {
 	}
 	store.Set("key1", channel1Deploy)
 	if d, ok := store.Get("key1"); assert.True(suite.T(), ok) {
-		assert.Equal(suite.T(), channel1Deploy, d)
+		assert.Equal(suite.T(), d.User, channel1Deploy.User)
+		assert.Equal(suite.T(), d.Subject, channel1Deploy.Subject)
+		assert.WithinDuration(suite.T(), d.StartedAt, channel1Deploy.StartedAt, time.Second)
+		assert.WithinDuration(suite.T(), d.FinishedAt, channel1Deploy.FinishedAt, time.Second)
+		assert.Equal(suite.T(), channel1Deploy.PullRequests, d.PullRequests)
+		assert.Equal(suite.T(), channel1Deploy.Subscribers, d.Subscribers)
 	}
 
 	// Populate another key
@@ -61,12 +66,22 @@ func (suite *StoreSuite) TestGetSet() {
 	}
 	store.Set("key2", channel2Deploy)
 	if d, ok := store.Get("key2"); assert.True(suite.T(), ok) {
-		assert.Equal(suite.T(), channel2Deploy, d)
+		assert.Equal(suite.T(), d.User, channel2Deploy.User)
+		assert.Equal(suite.T(), d.Subject, channel2Deploy.Subject)
+		assert.WithinDuration(suite.T(), d.StartedAt, channel2Deploy.StartedAt, time.Second)
+		assert.WithinDuration(suite.T(), d.FinishedAt, channel2Deploy.FinishedAt, time.Second)
+		assert.Equal(suite.T(), channel2Deploy.PullRequests, d.PullRequests)
+		assert.Equal(suite.T(), channel2Deploy.Subscribers, d.Subscribers)
 	}
 
 	// Check that another record wasn't changed
 	if d, ok := store.Get("key1"); assert.True(suite.T(), ok) {
-		assert.Equal(suite.T(), channel1Deploy, d)
+		assert.Equal(suite.T(), d.User, channel1Deploy.User)
+		assert.Equal(suite.T(), d.Subject, channel1Deploy.Subject)
+		assert.WithinDuration(suite.T(), d.StartedAt, channel1Deploy.StartedAt, time.Second)
+		assert.WithinDuration(suite.T(), d.FinishedAt, channel1Deploy.FinishedAt, time.Second)
+		assert.Equal(suite.T(), channel1Deploy.PullRequests, d.PullRequests)
+		assert.Equal(suite.T(), channel1Deploy.Subscribers, d.Subscribers)
 	}
 }
 
@@ -89,6 +104,11 @@ func (suite *StoreSuite) TestSet_Update() {
 	store.Set("key1", d)
 
 	if updated, ok := store.Get("key1"); assert.True(suite.T(), ok) {
-		assert.Equal(suite.T(), updated, d)
+		assert.Equal(suite.T(), d.User, updated.User)
+		assert.Equal(suite.T(), d.Subject, updated.Subject)
+		assert.WithinDuration(suite.T(), d.StartedAt, updated.StartedAt, time.Second)
+		assert.WithinDuration(suite.T(), d.FinishedAt, updated.FinishedAt, time.Second)
+		assert.Equal(suite.T(), updated.PullRequests, d.PullRequests)
+		assert.Equal(suite.T(), updated.Subscribers, d.Subscribers)
 	}
 }
