@@ -53,3 +53,5 @@ func (notifier *SlackIMNotifier) DeployCompleted(_ string, d deploy.Deploy) {
 		}
 	}
 }
+
+func (notifier *SlackIMNotifier) DeployAborted(_ string, _ deploy.Deploy) {}

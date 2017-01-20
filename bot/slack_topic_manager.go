@@ -22,29 +22,36 @@ func NewSlackTopicManager(webAPIClient *slack.WebAPI) *SlackTopicManager {
 }
 
 func (mgr *SlackTopicManager) DeployStarted(channelID string, _ deploy.Deploy) {
-	currentTopic, err := mgr.api.GetChannelTopic(channelID)
-	if err == nil {
-		newTopic := strings.Replace(currentTopic, DeployDoneEmotion, DeployInProgressEmotion, -1)
-		if newTopic != currentTopic {
-			err = mgr.api.SetChannelTopic(channelID, newTopic)
-		}
-	}
-
+	err := mgr.channelTopicReplace(channelID, DeployDoneEmotion, DeployInProgressEmotion)
 	if err != nil {
 		log.Printf("slack-topic-manager: %s", err)
 	}
 }
 
 func (mgr *SlackTopicManager) DeployCompleted(channelID string, _ deploy.Deploy) {
-	currentTopic, err := mgr.api.GetChannelTopic(channelID)
-	if err == nil {
-		newTopic := strings.Replace(currentTopic, DeployInProgressEmotion, DeployDoneEmotion, -1)
-		if newTopic != currentTopic {
-			err = mgr.api.SetChannelTopic(channelID, newTopic)
-		}
-	}
-
+	err := mgr.channelTopicReplace(channelID, DeployInProgressEmotion, DeployDoneEmotion)
 	if err != nil {
 		log.Printf("slack-topic-manager: %s", err)
 	}
+}
+
+func (mgr *SlackTopicManager) DeployAborted(channelID string, _ deploy.Deploy) {
+	err := mgr.channelTopicReplace(channelID, DeployInProgressEmotion, DeployDoneEmotion)
+	if err != nil {
+		log.Printf("slack-topic-manager: %s", err)
+	}
+}
+
+func (mgr *SlackTopicManager) channelTopicReplace(channelID, old, new string) error {
+	currentTopic, err := mgr.api.GetChannelTopic(channelID)
+	if err != nil {
+		return err
+	}
+
+	newTopic := strings.Replace(currentTopic, old, new, -1)
+	if newTopic == currentTopic {
+		return nil
+	}
+
+	return mgr.api.SetChannelTopic(channelID, newTopic)
 }

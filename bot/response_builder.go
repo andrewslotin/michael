@@ -18,15 +18,18 @@ const (
 /deploy <subject> — announce deploy of <subject> in channel
 /deploy status — show deploy status in channel
 /deploy done — finish deploy
+/deploy abort [<reason>] — abort current deploy, optionally providing a reason
 /deploy history — get a link to history of deploys in this channel`
-	errorMessage              = "`%s` returned an error %s"
-	noRunningDeploysMessage   = "No one is deploying at the moment"
-	deployStatusMessage       = "%s is deploying %s since %s"
-	deployConflictMessage     = "%s is deploying since %s. You can type `/deploy done` if you think this deploy is finished."
-	deployDoneMessage         = "%s done deploying"
-	deployInterruptedMessage  = "%s has finished the deploy started by %s"
-	deployAnnouncementMessage = "%s is about to deploy %s"
-	deployHistoryLinkMessage  = "Click <https://%s/%s|here> to see deploy history in this channel"
+	errorMessage                   = "`%s` returned an error %s"
+	noRunningDeploysMessage        = "No one is deploying at the moment"
+	deployStatusMessage            = "%s is deploying %s since %s"
+	deployConflictMessage          = "%s is deploying since %s. You can type `/deploy done` if you think this deploy is finished."
+	deployDoneMessage              = "%s done deploying"
+	deployInterruptedMessage       = "%s has finished the deploy started by %s"
+	deployAnnouncementMessage      = "%s is about to deploy %s"
+	deployHistoryLinkMessage       = "Click <https://%s/%s|here> to see deploy history in this channel"
+	deployAbortedMessage           = "%s has aborted the deploy"
+	deployAbortedWithReasonMessage = "%s has aborted the deploy (%s)"
 )
 
 type ResponseBuilder struct {
@@ -88,6 +91,14 @@ func (b *ResponseBuilder) DeployAnnouncement(d deploy.Deploy) *slack.Response {
 
 func (b *ResponseBuilder) DeployDoneAnnouncement(user slack.User) *slack.Response {
 	return newAnnouncement(fmt.Sprintf(deployDoneMessage, user))
+}
+
+func (b *ResponseBuilder) DeployAbortedAnnouncement(reason string, user slack.User) *slack.Response {
+	if reason != "" {
+		return newAnnouncement(fmt.Sprintf(deployAbortedWithReasonMessage, user, reason))
+	} else {
+		return newAnnouncement(fmt.Sprintf(deployAbortedMessage, user))
+	}
 }
 
 func (*ResponseBuilder) DeployHistoryLink(host, channelID, authToken string) *slack.Response {

@@ -23,7 +23,7 @@ Deploy history
 
 {{ range . -}}
 {{ if not .FinishedAt.IsZero -}}
-  * {{ .User.Name }} was deploying {{ .Subject }} since {{ .StartedAt | ftime }} until {{ .FinishedAt | ftime }}
+  * {{ .User.Name }} was deploying {{ .Subject }} since {{ .StartedAt | ftime }} until {{ .FinishedAt | ftime }}{{ if .Aborted }} (aborted{{ if .AbortReason }}, {{ .AbortReason }}{{ end }}){{ end }}
 {{ else -}}
   * {{ .User.Name }} is currently deploying {{ .Subject }} since {{ .StartedAt | ftime }}
 {{ end -}}

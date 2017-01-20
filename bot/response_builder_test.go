@@ -141,6 +141,28 @@ func TestResponseBuilder_DeployDoneAnnouncement(t *testing.T) {
 	assert.Contains(t, response.Text, user.String())
 }
 
+func TestResponseBuilder_DeployAbortedAnnouncement_NoReasonGiven(t *testing.T) {
+	user := slack.User{ID: "abc123", Name: "user1"}
+
+	b := bot.NewResponseBuilder(github.NewClient("", nil))
+	response := b.DeployAbortedAnnouncement("", user)
+
+	assert.Equal(t, slack.ResponseTypeInChannel, response.ResponseType)
+	assert.Contains(t, response.Text, user.String())
+}
+
+func TestResponseBuilder_DeployAbortedAnnouncement_WithReason(t *testing.T) {
+	user := slack.User{ID: "abc123", Name: "user1"}
+	reason := "things went wrong"
+
+	b := bot.NewResponseBuilder(github.NewClient("", nil))
+	response := b.DeployAbortedAnnouncement(reason, user)
+
+	assert.Equal(t, slack.ResponseTypeInChannel, response.ResponseType)
+	assert.Contains(t, response.Text, user.String())
+	assert.Contains(t, response.Text, reason)
+}
+
 func TestResponseBuilder_DeployHistoryLink_WithAuthToken(t *testing.T) {
 	b := bot.NewResponseBuilder(github.NewClient("", nil))
 	response := b.DeployHistoryLink("www.example.com:8080", "abc 123", "secret token")

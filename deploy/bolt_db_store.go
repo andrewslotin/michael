@@ -16,6 +16,7 @@ const (
 	subjectKey      = "subject"
 	startedAtKey    = "started_at"
 	finishedAtKey   = "finished_at"
+	abortedKey      = "aborted"
 	pullRequestsKey = "prs"
 	subscribersKey  = "subscribers"
 )
@@ -163,6 +164,10 @@ func (s *BoltDBStore) writeDeploy(deploy Deploy, channelBucket *bolt.Bucket) err
 
 	if !deploy.FinishedAt.IsZero() {
 		b.Put([]byte(finishedAtKey), []byte(deploy.FinishedAt.Format(time.RFC3339Nano)))
+
+		if deploy.Aborted {
+			b.Put([]byte(abortedKey), []byte(deploy.AbortReason))
+		}
 	}
 
 	if len(deploy.PullRequests) != 0 {
@@ -210,6 +215,11 @@ func (*BoltDBStore) readDeploy(key []byte, channelBucket *bolt.Bucket) (deploy D
 		} else {
 			deploy.FinishedAt = finishedAt
 		}
+	}
+
+	if value := b.Get([]byte(abortedKey)); value != nil {
+		deploy.Aborted = true
+		deploy.AbortReason = string(value)
 	}
 
 	if value := b.Get([]byte(pullRequestsKey)); value != nil {

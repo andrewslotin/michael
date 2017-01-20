@@ -123,8 +123,32 @@ func TestChannelDeploys_Finish(t *testing.T) {
 		assert.Equal(t, current.User, d.User)
 		assert.Equal(t, current.Subject, d.Subject)
 		assert.WithinDuration(t, time.Now(), d.FinishedAt, time.Second)
+		assert.False(t, d.Aborted)
 	}
 
 	_, ok := repo.Finish("key2")
+	assert.False(t, ok)
+}
+
+func TestChannelDeploys_Abort(t *testing.T) {
+	current := deploy.New(slack.User{ID: "1", Name: "Test User"}, "Test subject")
+	current.StartedAt = time.Now().Add(-2 * time.Second)
+
+	store := new(StoreMock)
+	store.
+		On("Get", "key1").Return(current, true).
+		On("Get", "key2").Return(deploy.Deploy{}, false).
+		On("Set", "key1", mock.AnythingOfType("deploy.Deploy")).Return()
+
+	repo := deploy.NewChannelDeploys(store)
+
+	if d, ok := repo.Abort("key1", "something went wrong"); assert.True(t, ok) {
+		assert.Equal(t, current.User, d.User)
+		assert.Equal(t, current.Subject, d.Subject)
+		assert.WithinDuration(t, time.Now(), d.FinishedAt, time.Second)
+		assert.True(t, d.Aborted)
+	}
+
+	_, ok := repo.Abort("key2", "something went wrong")
 	assert.False(t, ok)
 }

@@ -115,6 +115,54 @@ func TestSlackTopicManager_DeployCompleted_NoRunningDeploy(t *testing.T) {
 	assert.Equal(t, "-=:poop:"+strings.Repeat(bot.DeployDoneEmotion, 3)+":poop:=-", channel.Topic)
 }
 
+func TestSlackTopicManager_DeployAborted_InProgress(t *testing.T) {
+	baseURL, channel, teardown := setupSlackWebAPITestServer(t)
+	defer teardown()
+
+	channel.ID = "CHANNELID1"
+	channel.Topic = "-=:poop:" + strings.Repeat(bot.DeployInProgressEmotion, 3) + ":poop:=-"
+
+	webAPI := slack.NewWebAPI(webAPIToken, nil)
+	webAPI.BaseURL = baseURL
+
+	mgr := bot.NewSlackTopicManager(webAPI)
+	mgr.DeployAborted(channel.ID, deploy.Deploy{})
+
+	assert.Equal(t, "-=:poop:"+strings.Repeat(bot.DeployDoneEmotion, 3)+":poop:=-", channel.Topic)
+}
+
+func TestSlackTopicManager_DeployAborted_NoTopicNotification(t *testing.T) {
+	baseURL, channel, teardown := setupSlackWebAPITestServer(t)
+	defer teardown()
+
+	channel.ID = "CHANNELID1"
+	channel.Topic = "-=:poop:=-"
+
+	webAPI := slack.NewWebAPI(webAPIToken, nil)
+	webAPI.BaseURL = baseURL
+
+	mgr := bot.NewSlackTopicManager(webAPI)
+	mgr.DeployAborted(channel.ID, deploy.Deploy{})
+
+	assert.Equal(t, "-=:poop:=-", channel.Topic)
+}
+
+func TestSlackTopicManager_DeployAborted_NoRunningDeploy(t *testing.T) {
+	baseURL, channel, teardown := setupSlackWebAPITestServer(t)
+	defer teardown()
+
+	channel.ID = "CHANNELID1"
+	channel.Topic = "-=:poop:" + strings.Repeat(bot.DeployDoneEmotion, 3) + ":poop:=-"
+
+	webAPI := slack.NewWebAPI(webAPIToken, nil)
+	webAPI.BaseURL = baseURL
+
+	mgr := bot.NewSlackTopicManager(webAPI)
+	mgr.DeployAborted(channel.ID, deploy.Deploy{})
+
+	assert.Equal(t, "-=:poop:"+strings.Repeat(bot.DeployDoneEmotion, 3)+":poop:=-", channel.Topic)
+}
+
 func setupSlackWebAPITestServer(t *testing.T) (baseURL string, channel *SlackChannel, teardownFn func()) {
 	channel = &SlackChannel{}
 	mux := http.NewServeMux()
