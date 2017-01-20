@@ -71,6 +71,16 @@ the deploy bot will swap these emojis.
 
 To disable this feature without re-deploying the whole service simply remove emojis from channel topic.
 
+### User mentions in deploy subjects
+
+You can mention one or multiple users in deploy subject.
+
+<img src="../master/docs/deploy-mention.png" alt="Mentioning user in a deploy subject" height="140">
+
+Once the deploy is done, they all will receive a direct message from deploy bot.
+
+<img src="../master/docs/deploy-mention-notification.png" alt="Deploy done direct message notification" height="44">
+
 ### Persistent deploy statuses
 
 To keep the deploy status between service restarts you might want to use built-in BoltDB database. To do this you need to specify the path to
