@@ -43,21 +43,21 @@ Usage
 Deploys are tracked per channel. This means that different channels can run different deploys at the same time.
 
 * <kbd>/deploy status</kbd> — see if there is a deploy currently running.
-    <img src="../hires_screenshots/docs/deploy-status.png" alt="Deploy status response" height="50">
+    <img src="../master/docs/deploy-status.png" alt="Deploy status response" height="50">
 * <kbd>/deploy &lt;subject&gt;</kbd> — initiate a deploy in the channel. <subject> is an arbitrary string describing what's being deployed.
-    <img src="../hires_screenshots/docs/deploy-start.png" alt="Deploy announcement" height="134">
+    <img src="../master/docs/deploy-start.png" alt="Deploy announcement" height="134">
 
     If there is already a deploy announced by another user in this channel, it needs to be finished first.
-    <img src="../hires_screenshots/docs/deploy-running.png" alt="Deploy already started message" height="54">
+    <img src="../master/docs/deploy-running.png" alt="Deploy already started message" height="54">
     
     However if you already initiated a deploy the channel, you can update its subject by executing this command again.
 * <kbd>/deploy done</kbd> — finish current deploy.
 
-    <img src="../hires_screenshots/docs/deploy-done.png" alt="Deploy completion announcement" height="44">
+    <img src="../master/docs/deploy-done.png" alt="Deploy completion announcement" height="44">
     
     You can also finish a deploy started by another user.
     
-    <img src="../hires_screenshots/docs/deploy-finish-other.png" alt="Complete unfinished deploy" height="42">
+    <img src="../master/docs/deploy-finish-other.png" alt="Complete unfinished deploy" height="42">
 
 ### Deploy status in channel topic
 
@@ -67,9 +67,19 @@ is a deploy in progress. To use this feature you need to provide [Slack Web API 
 `SLACK_WEBAPI_TOKEN` environment variable and add either `:white_check_mark:` or `:no_entry:` to the channel topic. Whenever the deploy changes
 the deploy bot will swap these emojis.
 
-<img src="../hires_screenshots/docs/topic-deploy.png" alt="Channel topic notification" height="270">
+<img src="../master/docs/topic-deploy.png" alt="Channel topic notification" height="270">
 
 To disable this feature without re-deploying the whole service simply remove emojis from channel topic.
+
+### User mentions in deploy subjects
+
+You can mention one or multiple users in deploy subject.
+
+<img src="../master/docs/deploy-mention.png" alt="Mentioning user in a deploy subject" height="140">
+
+Once the deploy is done, they all will receive a direct message from deploy bot.
+
+<img src="../master/docs/deploy-mention-notification.png" alt="Deploy done direct message notification" height="44">
 
 ### Persistent deploy statuses
 
@@ -84,7 +94,7 @@ BOLTDB_PATH=/path/to/your/bolt.db $GOPATH/bin/michael
 
 To see the history of deploys in channel run <kbd>/deploy history</kbd> in this channel and click the link returned by bot.
 
-<img src="../hires_screenshots/docs/deploy-history.png" alt="Channel history link" height="52">
+<img src="../master/docs/deploy-history.png" alt="Channel history link" height="52">
 
 This will open a page in your browser with all deploys that were ever announced in this channel.
 
